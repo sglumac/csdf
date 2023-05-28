@@ -84,8 +84,19 @@ void delete_record_produced_options(const CsdfGraph *graph, CsdfRecordOptions *r
     free(recordOptions);
 }
 
-void *get_recorded_produced_tokens(void *recordState, size_t actorId, size_t outputId)
+void *new_record_storage(const CsdfRecordOptions *recordOptions, size_t actorId, size_t outputId)
 {
-    RecordProducedState *state = recordState;
-    return state->allProduced[actorId][outputId];
+    RecordProducedState *state = recordOptions->recordState;
+    return malloc(state->ends[actorId][outputId]);
+}
+
+void delete_record_storage(void *recordStorage)
+{
+    free(recordStorage);
+}
+
+void copy_recorded_produced_tokens(const CsdfRecordOptions *recordOptions, size_t actorId, size_t outputId, void *recordStorage)
+{
+    RecordProducedState *state = recordOptions->recordState;
+    memcpy(recordStorage, state->allProduced[actorId][outputId], state->ends[actorId][outputId]);
 }

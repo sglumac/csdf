@@ -125,7 +125,8 @@ void test_larger_produced_record(YacuTestRun *testRun)
     bool iterationCompleted = sequential_iteration(recordOptions, state);
     delete_sequential_state(state);
 
-    int *leftIntOutputProducedTokens = get_recorded_produced_tokens(recordOptions->recordState, 0, 1);
+    int *leftIntOutputProducedTokens = new_record_storage(recordOptions, 0, 1);
+    copy_recorded_produced_tokens(recordOptions, 0, 1, leftIntOutputProducedTokens);
     YACU_ASSERT_EQ_INT(testRun, leftIntOutputProducedTokens[0], 2);
     for (size_t i = 1; i < 7; i++)
     {
@@ -136,8 +137,10 @@ void test_larger_produced_record(YacuTestRun *testRun)
     {
         YACU_ASSERT_EQ_INT(testRun, leftIntOutputProducedTokens[i], 7);
     }
+    delete_record_storage(leftIntOutputProducedTokens);
 
-    double *leftDoubleOutputProducedTokens = get_recorded_produced_tokens(recordOptions->recordState, 0, 0);
+    double *leftDoubleOutputProducedTokens = new_record_storage(recordOptions, 0, 0);
+    copy_recorded_produced_tokens(recordOptions, 0, 0, leftDoubleOutputProducedTokens);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, leftDoubleOutputProducedTokens[0], (double)'a', 1e-3);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, leftDoubleOutputProducedTokens[1], (double)'b', 1e-3);
     for (size_t i = 2; i < 5; i++)
@@ -151,18 +154,23 @@ void test_larger_produced_record(YacuTestRun *testRun)
         YACU_ASSERT_APPROX_EQ_DBL(testRun, leftDoubleOutputProducedTokens[i], (double)'f', 1e-3);
     }
 
-    char *rightCharOutputProducedTokens = get_recorded_produced_tokens(recordOptions->recordState, 1, 0);
+    char *rightCharOutputProducedTokens = new_record_storage(recordOptions, 1, 0);
+    copy_recorded_produced_tokens(recordOptions, 1, 0, rightCharOutputProducedTokens);
     for (size_t i = 0; i < 3; i++)
     {
         YACU_ASSERT_EQ_CHAR(testRun, rightCharOutputProducedTokens[i], (char)leftDoubleOutputProducedTokens[i]);
         YACU_ASSERT_EQ_CHAR(testRun, rightCharOutputProducedTokens[i + 3], (char)leftDoubleOutputProducedTokens[i + 5]);
     }
+    delete_record_storage(leftDoubleOutputProducedTokens);
+    delete_record_storage(rightCharOutputProducedTokens);
 
-    int *rightIntOutputProducedTokens = get_recorded_produced_tokens(recordOptions->recordState, 1, 1);
+    int *rightIntOutputProducedTokens = new_record_storage(recordOptions, 1, 1);
+    copy_recorded_produced_tokens(recordOptions, 1, 1, rightIntOutputProducedTokens);
     YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[0], 2);
     YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[1], 3);
     YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[2], 5);
     YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[3], 7);
+    delete_record_storage(rightIntOutputProducedTokens);
 
     delete_record_produced_options(&LARGER_GRAPH, recordOptions);
     YACU_ASSERT_TRUE(testRun, iterationCompleted);

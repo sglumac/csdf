@@ -27,6 +27,10 @@ CsdfRecordOptions *new_record_produced_options(const CsdfGraph *graph, size_t ma
 
 void delete_record_produced_options(const CsdfGraph *graph, CsdfRecordOptions *recordOptions);
 
-void *get_recorded_produced_tokens(void *recordState, size_t actorId, size_t outputId);
+void *new_record_storage(const CsdfRecordOptions *recordOptions, size_t actorId, size_t outputId);
+
+void delete_record_storage(void *recordStorage);
+
+void copy_recorded_produced_tokens(const CsdfRecordOptions *recordOptions, size_t actorId, size_t outputId, void *recordStorage);
 
 #endif // CSDF_RECORD_H
