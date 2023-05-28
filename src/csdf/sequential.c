@@ -44,8 +44,19 @@ static unsigned number_tokens(const CsdfBufferState *state)
                : end + state->bufferSize - start;
 }
 
-static CsdfBufferState *new_buffer_states(const CsdfGraph *graph, size_t bufferSize)
+static size_t calculate_buffer_size(CsdfGraphState *state, const CsdfBuffer *buffer)
 {
+    size_t numInitialTokens = buffer->numTokens;
+    size_t actorId = buffer->source.actorId;
+    const CsdfActor *actor = state->graph->actors + actorId;
+    const CsdfOutput *output = actor->outputs + buffer->source.outputId;
+    size_t potentiallyProducedTokens = state->repetitionVector[actorId] * output->production;
+    return numInitialTokens + potentiallyProducedTokens + 1;
+}
+
+static CsdfBufferState *new_buffer_states(CsdfGraphState *state)
+{
+    const CsdfGraph *graph = state->graph;
     CsdfBufferState *bufferStates = malloc(graph->numBuffers * sizeof(CsdfBufferState));
     for (size_t bufferId = 0; bufferId < graph->numBuffers; bufferId++)
     {
@@ -55,6 +66,7 @@ static CsdfBufferState *new_buffer_states(const CsdfGraph *graph, size_t bufferS
         bufferState->buffer = buffer;
         bufferState->start = 0;
         bufferState->end = 0;
+        size_t bufferSize = calculate_buffer_size(state, buffer);
         bufferState->tokens = malloc(bufferSize * buffer->tokenSize);
         bufferState->bufferSize = bufferSize;
         uint8_t *bufferStateTokens = bufferState->tokens;
@@ -64,11 +76,14 @@ static CsdfBufferState *new_buffer_states(const CsdfGraph *graph, size_t bufferS
     return bufferStates;
 }
 
-CsdfGraphState *new_sequential_state(const CsdfGraph *graph, int maxBufferTokens)
+CsdfGraphState *new_sequential_state(const CsdfGraph *graph)
 {
     CsdfGraphState *state = malloc(sizeof(CsdfGraphState));
     state->graph = graph;
-    state->bufferStates = new_buffer_states(graph, maxBufferTokens);
+    unsigned int *repetitionVector = malloc(graph->numActors * sizeof(size_t));
+    csdf_repetition_vector(graph, repetitionVector);
+    state->repetitionVector = repetitionVector;
+    state->bufferStates = new_buffer_states(state);
 
     state->consumed = malloc(graph->numActors * sizeof(uint8_t *));
     state->produced = malloc(graph->numActors * sizeof(uint8_t *));
@@ -91,9 +106,6 @@ CsdfGraphState *new_sequential_state(const CsdfGraph *graph, int maxBufferTokens
         }
         state->produced[actorId] = malloc(sizeProducedTokens);
     }
-    unsigned int *repetitionVector = malloc(graph->numActors * sizeof(size_t));
-    csdf_repetition_vector(graph, repetitionVector);
-    state->repetitionVector = repetitionVector;
     return state;
 }
 

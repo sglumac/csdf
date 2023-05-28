@@ -53,7 +53,7 @@ void test_simple_fire(YacuTestRun *testRun)
         .on_token_consumed = on_simple_token_consumed,
         .on_token_produced = on_simple_token_produced,
         .recordState = &recordState};
-    CsdfGraphState *state = new_sequential_state(&SIMPLE_GRAPH, 10);
+    CsdfGraphState *state = new_sequential_state(&SIMPLE_GRAPH);
     YACU_ASSERT_TRUE(testRun, can_fire(state, 0));
     fire(&options, state, 0);
     delete_sequential_state(state);
@@ -69,7 +69,7 @@ void test_simple_sequential_iteration(YacuTestRun *testRun)
         .on_token_consumed = on_simple_token_consumed,
         .on_token_produced = on_simple_token_produced,
         .recordState = &recordState};
-    CsdfGraphState *state = new_sequential_state(&SIMPLE_GRAPH, 10);
+    CsdfGraphState *state = new_sequential_state(&SIMPLE_GRAPH);
     bool iterationCompleted = sequential_iteration(&options, state);
     delete_sequential_state(state);
     YACU_ASSERT_TRUE(testRun, iterationCompleted);
@@ -110,7 +110,7 @@ void test_larger_sequential_iteration(YacuTestRun *testRun)
         .on_token_consumed = on_larger_token_consumed,
         .on_token_produced = on_larger_token_produced,
         .recordState = &recordState};
-    CsdfGraphState *state = new_sequential_state(&LARGER_GRAPH, 100);
+    CsdfGraphState *state = new_sequential_state(&LARGER_GRAPH);
     bool iterationCompleted = sequential_iteration(&options, state);
     delete_sequential_state(state);
     YACU_ASSERT_TRUE(testRun, iterationCompleted);
@@ -121,7 +121,7 @@ void test_larger_sequential_iteration(YacuTestRun *testRun)
 void test_larger_produced_record(YacuTestRun *testRun)
 {
     CsdfRecordOptions *recordOptions = new_record_produced_options(&LARGER_GRAPH, 100);
-    CsdfGraphState *state = new_sequential_state(&LARGER_GRAPH, 100);
+    CsdfGraphState *state = new_sequential_state(&LARGER_GRAPH);
     bool iterationCompleted = sequential_iteration(recordOptions, state);
     delete_sequential_state(state);
 

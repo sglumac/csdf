@@ -34,7 +34,7 @@ typedef struct CsdfGraphState
     uint8_t **produced;
 } CsdfGraphState;
 
-CsdfGraphState *new_sequential_state(const CsdfGraph *graph, int maxBufferTokens);
+CsdfGraphState *new_sequential_state(const CsdfGraph *graph);
 
 void delete_sequential_state(CsdfGraphState *state);
 
