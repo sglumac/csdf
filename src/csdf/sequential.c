@@ -177,19 +177,28 @@ void produce(CsdfGraphState *state, size_t actorId)
 {
     const CsdfActor *actor = &state->graph->actors[actorId];
     uint8_t *produced = state->produced[actorId];
-    for (size_t bufferId = 0; bufferId < state->graph->numBuffers; bufferId++)
+    uint8_t *producedByPort = produced;
+    const CsdfOutput *srcPort = actor->outputs;
+    for (
+        size_t srcPortId = 0;
+        srcPortId < actor->numOutputs;
+        producedByPort += srcPort->tokenSize * srcPort->production, srcPortId++, srcPort++)
     {
-        CsdfBufferState *bufferState = &state->bufferStates[bufferId];
-        if (bufferState->buffer->source.actorId == actorId)
+        uint8_t *producedForBuffer;
+        for (size_t bufferId = 0; bufferId < state->graph->numBuffers; bufferId++)
         {
-            size_t srcPortId = bufferState->buffer->source.outputId;
-            const CsdfOutput *srcPort = &actor->outputs[srcPortId];
-            for (size_t tokenId = 0; tokenId < srcPort->production; tokenId++)
+            producedForBuffer = producedByPort;
+            CsdfBufferState *bufferState = &state->bufferStates[bufferId];
+            if (bufferState->buffer->source.actorId == actorId && bufferState->buffer->source.outputId == srcPortId)
             {
-                push(bufferState, produced);
-                produced += srcPort->tokenSize;
+                for (size_t tokenId = 0; tokenId < srcPort->production; tokenId++)
+                {
+                    push(bufferState, producedForBuffer);
+                    producedForBuffer += srcPort->tokenSize;
+                }
             }
         }
+        producedByPort = producedForBuffer;
     }
 }
 
