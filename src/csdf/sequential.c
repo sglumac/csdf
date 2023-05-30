@@ -184,10 +184,9 @@ void produce(CsdfGraphState *state, size_t actorId)
         srcPortId < actor->numOutputs;
         producedByPort += srcPort->tokenSize * srcPort->production, srcPortId++, srcPort++)
     {
-        uint8_t *producedForBuffer;
-        for (size_t bufferId = 0; bufferId < state->graph->numBuffers; bufferId++)
+        uint8_t *producedForBuffer = producedByPort;
+        for (size_t bufferId = 0; bufferId < state->graph->numBuffers; bufferId++, producedForBuffer = producedByPort)
         {
-            producedForBuffer = producedByPort;
             CsdfBufferState *bufferState = &state->bufferStates[bufferId];
             if (bufferState->buffer->source.actorId == actorId && bufferState->buffer->source.outputId == srcPortId)
             {
