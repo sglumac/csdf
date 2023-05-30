@@ -8,4 +8,7 @@ else()
 endif()
 
 add_subdirectory(src)
-add_subdirectory(tests)
+
+if(BUILD_CSDF_TESTS STREQUAL "True")
+  add_subdirectory(tests)
+endif()

@@ -5,7 +5,7 @@ BUILD_DIR=$SCRIPT_DIR/build
 
 mkdir $BUILD_DIR
 cd $BUILD_DIR
-cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake -DBUILD_CSDF_TESTS=True -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build .
 cd $CURRENT_DIR
 
