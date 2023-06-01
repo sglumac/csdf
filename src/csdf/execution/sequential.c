@@ -44,19 +44,19 @@ static unsigned number_tokens(const CsdfBufferState *state)
                : end + state->bufferSize - start;
 }
 
-static size_t calculate_buffer_size(CsdfGraphState *state, const CsdfBuffer *buffer)
+static size_t calculate_buffer_size(CsdfSequentialRun *runData, const CsdfBuffer *buffer)
 {
     size_t numInitialTokens = buffer->numTokens;
     size_t actorId = buffer->source.actorId;
-    const CsdfActor *actor = state->graph->actors + actorId;
+    const CsdfActor *actor = runData->graph->actors + actorId;
     const CsdfOutput *output = actor->outputs + buffer->source.outputId;
-    size_t potentiallyProducedTokens = state->repetitionVector[actorId] * output->production;
+    size_t potentiallyProducedTokens = runData->repetitionVector[actorId] * output->production;
     return numInitialTokens + potentiallyProducedTokens + 1;
 }
 
-static CsdfBufferState *new_buffer_states(CsdfGraphState *state)
+static CsdfBufferState *new_buffer_states(CsdfSequentialRun *runData)
 {
-    const CsdfGraph *graph = state->graph;
+    const CsdfGraph *graph = runData->graph;
     CsdfBufferState *bufferStates = malloc(graph->numBuffers * sizeof(CsdfBufferState));
     for (size_t bufferId = 0; bufferId < graph->numBuffers; bufferId++)
     {
@@ -66,7 +66,7 @@ static CsdfBufferState *new_buffer_states(CsdfGraphState *state)
         bufferState->buffer = buffer;
         bufferState->start = 0;
         bufferState->end = 0;
-        size_t bufferSize = calculate_buffer_size(state, buffer);
+        size_t bufferSize = calculate_buffer_size(runData, buffer);
         bufferState->tokens = malloc(bufferSize * buffer->tokenSize);
         bufferState->bufferSize = bufferSize;
         uint8_t *bufferStateTokens = bufferState->tokens;
@@ -76,17 +76,18 @@ static CsdfBufferState *new_buffer_states(CsdfGraphState *state)
     return bufferStates;
 }
 
-CsdfGraphState *new_sequential_state(const CsdfGraph *graph)
+CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, const CsdfRecordOptions *recordOptions)
 {
-    CsdfGraphState *state = malloc(sizeof(CsdfGraphState));
-    state->graph = graph;
+    CsdfSequentialRun *runData = malloc(sizeof(CsdfSequentialRun));
+    runData->graph = graph;
+    runData->recordOptions = recordOptions;
     unsigned int *repetitionVector = malloc(graph->numActors * sizeof(size_t));
     csdf_repetition_vector(graph, repetitionVector);
-    state->repetitionVector = repetitionVector;
-    state->bufferStates = new_buffer_states(state);
+    runData->repetitionVector = repetitionVector;
+    runData->bufferStates = new_buffer_states(runData);
 
-    state->consumed = malloc(graph->numActors * sizeof(uint8_t *));
-    state->produced = malloc(graph->numActors * sizeof(uint8_t *));
+    runData->consumed = malloc(graph->numActors * sizeof(uint8_t *));
+    runData->produced = malloc(graph->numActors * sizeof(uint8_t *));
     for (size_t actorId = 0; actorId < graph->numActors; actorId++)
     {
         const CsdfActor *actor = &graph->actors[actorId];
@@ -96,7 +97,7 @@ CsdfGraphState *new_sequential_state(const CsdfGraph *graph)
             const CsdfInput *input = &actor->inputs[inputId];
             sizeConsumedTokens += input->consumption * input->tokenSize;
         }
-        state->consumed[actorId] = malloc(sizeConsumedTokens);
+        runData->consumed[actorId] = malloc(sizeConsumedTokens);
 
         size_t sizeProducedTokens = 0;
         for (size_t outputId = 0; outputId < actor->numOutputs; outputId++)
@@ -104,37 +105,37 @@ CsdfGraphState *new_sequential_state(const CsdfGraph *graph)
             const CsdfOutput *output = &actor->outputs[outputId];
             sizeProducedTokens += output->production * output->tokenSize;
         }
-        state->produced[actorId] = malloc(sizeProducedTokens);
+        runData->produced[actorId] = malloc(sizeProducedTokens);
     }
-    return state;
+    return runData;
 }
 
-void delete_sequential_state(CsdfGraphState *state)
+void delete_sequential_run(CsdfSequentialRun *runData)
 {
-    for (size_t actorId = 0; actorId < state->graph->numActors; actorId++)
+    for (size_t actorId = 0; actorId < runData->graph->numActors; actorId++)
     {
-        free(state->consumed[actorId]);
-        free(state->produced[actorId]);
+        free(runData->consumed[actorId]);
+        free(runData->produced[actorId]);
     }
-    for (size_t bufferId = 0; bufferId < state->graph->numBuffers; bufferId++)
+    for (size_t bufferId = 0; bufferId < runData->graph->numBuffers; bufferId++)
     {
-        CsdfBufferState *bufferState = &state->bufferStates[bufferId];
+        CsdfBufferState *bufferState = &runData->bufferStates[bufferId];
         free(bufferState->tokens);
     }
-    free(state->consumed);
-    free(state->produced);
-    free(state->bufferStates);
-    free(state->repetitionVector);
-    free(state);
+    free(runData->consumed);
+    free(runData->produced);
+    free(runData->bufferStates);
+    free(runData->repetitionVector);
+    free(runData);
 }
 
-bool can_fire(CsdfGraphState *state, size_t actorId)
+bool can_fire(CsdfSequentialRun *runData, size_t actorId)
 {
-    const CsdfActor *actor = &state->graph->actors[actorId];
+    const CsdfActor *actor = &runData->graph->actors[actorId];
 
-    for (size_t bufferId = 0; bufferId < state->graph->numBuffers; bufferId++)
+    for (size_t bufferId = 0; bufferId < runData->graph->numBuffers; bufferId++)
     {
-        const CsdfBufferState *bufferState = &state->bufferStates[bufferId];
+        const CsdfBufferState *bufferState = &runData->bufferStates[bufferId];
         if (bufferState->buffer->destination.actorId == actorId)
         {
             size_t dstPortId = bufferState->buffer->destination.inputId;
@@ -148,15 +149,15 @@ bool can_fire(CsdfGraphState *state, size_t actorId)
     return true;
 }
 
-static uint8_t *consume(CsdfGraphState *state, size_t actorId)
+static uint8_t *consume(CsdfSequentialRun *runData, size_t actorId)
 {
-    uint8_t *consumed = state->consumed[actorId];
-    const CsdfActor *actor = &state->graph->actors[actorId];
+    uint8_t *consumed = runData->consumed[actorId];
+    const CsdfActor *actor = &runData->graph->actors[actorId];
     for (size_t dstPortId = 0; dstPortId < actor->numInputs; dstPortId++)
     {
-        for (size_t bufferId = 0; bufferId < state->graph->numBuffers; bufferId++)
+        for (size_t bufferId = 0; bufferId < runData->graph->numBuffers; bufferId++)
         {
-            CsdfBufferState *bufferState = &state->bufferStates[bufferId];
+            CsdfBufferState *bufferState = &runData->bufferStates[bufferId];
             const CsdfInputId *dstPort = &bufferState->buffer->destination;
             if (dstPort->actorId == actorId && dstPort->inputId == dstPortId)
             {
@@ -170,13 +171,13 @@ static uint8_t *consume(CsdfGraphState *state, size_t actorId)
             }
         }
     }
-    return state->consumed[actorId];
+    return runData->consumed[actorId];
 }
 
-void produce(CsdfGraphState *state, size_t actorId)
+void produce(CsdfSequentialRun *runData, size_t actorId)
 {
-    const CsdfActor *actor = &state->graph->actors[actorId];
-    uint8_t *produced = state->produced[actorId];
+    const CsdfActor *actor = &runData->graph->actors[actorId];
+    uint8_t *produced = runData->produced[actorId];
     uint8_t *producedByPort = produced;
     const CsdfOutput *srcPort = actor->outputs;
     for (
@@ -185,9 +186,9 @@ void produce(CsdfGraphState *state, size_t actorId)
         producedByPort += srcPort->tokenSize * srcPort->production, srcPortId++, srcPort++)
     {
         uint8_t *producedForBuffer = producedByPort;
-        for (size_t bufferId = 0; bufferId < state->graph->numBuffers; bufferId++, producedForBuffer = producedByPort)
+        for (size_t bufferId = 0; bufferId < runData->graph->numBuffers; bufferId++, producedForBuffer = producedByPort)
         {
-            CsdfBufferState *bufferState = &state->bufferStates[bufferId];
+            CsdfBufferState *bufferState = &runData->bufferStates[bufferId];
             if (bufferState->buffer->source.actorId == actorId && bufferState->buffer->source.outputId == srcPortId)
             {
                 for (size_t tokenId = 0; tokenId < srcPort->production; tokenId++)
@@ -201,24 +202,24 @@ void produce(CsdfGraphState *state, size_t actorId)
     }
 }
 
-static void record_results(const CsdfRecordOptions *recordOptions, CsdfGraphState *state, size_t actorId)
+static void record_results(const CsdfRecordOptions *recordOptions, CsdfSequentialRun *runData, size_t actorId)
 {
-    uint8_t *produced = state->produced[actorId];
+    uint8_t *produced = runData->produced[actorId];
 
     if (recordOptions->on_token_produced != NULL)
     {
-        recordOptions->on_token_produced(state->graph, recordOptions->recordState, actorId, produced);
+        recordOptions->on_token_produced(runData->graph, recordOptions->recordState, actorId, produced);
     }
 }
 
-void fire(const CsdfRecordOptions *recordOptions, CsdfGraphState *state, size_t actorId)
+void fire(CsdfSequentialRun *runData, size_t actorId)
 {
-    uint8_t *consumed = consume(state, actorId);
-    uint8_t *produced = state->produced[actorId];
-    const CsdfActor *actor = &state->graph->actors[actorId];
+    uint8_t *consumed = consume(runData, actorId);
+    uint8_t *produced = runData->produced[actorId];
+    const CsdfActor *actor = &runData->graph->actors[actorId];
     actor->execution(consumed, produced);
-    produce(state, actorId);
-    record_results(recordOptions, state, actorId);
+    produce(runData, actorId);
+    record_results(runData->recordOptions, runData, actorId);
 }
 
 static bool all_zero(unsigned int *repetitionVector, size_t numActors)
@@ -233,20 +234,20 @@ static bool all_zero(unsigned int *repetitionVector, size_t numActors)
     return true;
 }
 
-bool sequential_iteration(const CsdfRecordOptions *recordOptions, CsdfGraphState *state)
+bool sequential_iteration(CsdfSequentialRun *runData)
 {
     bool blocked = false;
-    unsigned int numActors = state->graph->numActors;
+    unsigned int numActors = runData->graph->numActors;
     unsigned int *repetitionVector = malloc(numActors * sizeof(unsigned int));
-    memcpy(repetitionVector, state->repetitionVector, numActors * sizeof(unsigned int));
+    memcpy(repetitionVector, runData->repetitionVector, numActors * sizeof(unsigned int));
     while (!blocked)
     {
         blocked = true;
         for (size_t actorId = 0; actorId < numActors; actorId++)
         {
-            if (repetitionVector[actorId] > 0 && can_fire(state, actorId))
+            if (repetitionVector[actorId] > 0 && can_fire(runData, actorId))
             {
-                fire(recordOptions, state, actorId);
+                fire(runData, actorId);
                 repetitionVector[actorId]--;
                 blocked = false;
                 break;

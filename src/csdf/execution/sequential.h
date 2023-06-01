@@ -25,23 +25,24 @@ typedef struct CsdfBufferState
     uint8_t *tokens;
 } CsdfBufferState;
 
-typedef struct CsdfGraphState
+typedef struct CsdfSequentialRun
 {
     const CsdfGraph *graph;
     unsigned int *repetitionVector;
+    const CsdfRecordOptions *recordOptions;
     CsdfBufferState *bufferStates;
     uint8_t **consumed;
     uint8_t **produced;
-} CsdfGraphState;
+} CsdfSequentialRun;
 
-CsdfGraphState *new_sequential_state(const CsdfGraph *graph);
+CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, const CsdfRecordOptions *recordOptions);
 
-void delete_sequential_state(CsdfGraphState *state);
+void delete_sequential_run(CsdfSequentialRun *runData);
 
-bool can_fire(CsdfGraphState *state, size_t actorId);
+bool can_fire(CsdfSequentialRun *runData, size_t actorId);
 
-void fire(const CsdfRecordOptions *recordOptions, CsdfGraphState *state, size_t actorId);
+void fire(CsdfSequentialRun *runData, size_t actorId);
 
-bool sequential_iteration(const CsdfRecordOptions *recordOptions, CsdfGraphState *state);
+bool sequential_iteration(CsdfSequentialRun *runData);
 
 #endif // CSDF_SEQUENTIAL_H

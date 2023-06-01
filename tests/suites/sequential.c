@@ -17,7 +17,6 @@ typedef struct SimpleResultsState
 {
     bool fired[3];
     double produced[3];
-    double consumed[3];
 } SimpleResultsState;
 
 void on_simple_token_produced(const CsdfGraph *graph, void *recordState, size_t actorId, void *produced)
@@ -35,14 +34,14 @@ void on_simple_token_produced(const CsdfGraph *graph, void *recordState, size_t 
 
 void test_simple_fire(YacuTestRun *testRun)
 {
-    SimpleResultsState recordState = {.fired = {false}, .consumed = {0.}, .produced = {0.}};
+    SimpleResultsState recordState = {.fired = {false}, .produced = {0.}};
     CsdfRecordOptions options = {
         .on_token_produced = on_simple_token_produced,
         .recordState = &recordState};
-    CsdfGraphState *state = new_sequential_state(&SIMPLE_GRAPH);
-    YACU_ASSERT_TRUE(testRun, can_fire(state, 0));
-    fire(&options, state, 0);
-    delete_sequential_state(state);
+    CsdfSequentialRun *runData = new_sequential_run(&SIMPLE_GRAPH, &options);
+    YACU_ASSERT_TRUE(testRun, can_fire(runData, 0));
+    fire(runData, 0);
+    delete_sequential_run(runData);
 
     YACU_ASSERT_TRUE(testRun, recordState.fired[0]);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, recordState.produced[0], 3., 1e-3);
@@ -50,21 +49,19 @@ void test_simple_fire(YacuTestRun *testRun)
 
 void test_simple_sequential_iteration(YacuTestRun *testRun)
 {
-    SimpleResultsState recordState = {.fired = {false}, .consumed = {0.}, .produced = {0.}};
+    SimpleResultsState recordState = {.fired = {false}, .produced = {0.}};
     CsdfRecordOptions options = {
         .on_token_produced = on_simple_token_produced,
         .recordState = &recordState};
-    CsdfGraphState *state = new_sequential_state(&SIMPLE_GRAPH);
-    bool iterationCompleted = sequential_iteration(&options, state);
-    delete_sequential_state(state);
+    CsdfSequentialRun *runData = new_sequential_run(&SIMPLE_GRAPH, &options);
+    bool iterationCompleted = sequential_iteration(runData);
+    delete_sequential_run(runData);
     YACU_ASSERT_TRUE(testRun, iterationCompleted);
     YACU_ASSERT_TRUE(testRun, recordState.fired[0]);
     YACU_ASSERT_TRUE(testRun, recordState.fired[1]);
     YACU_ASSERT_TRUE(testRun, recordState.fired[2]);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, recordState.produced[0], 3., 1e-3);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, recordState.produced[1], 6., 1e-3);
-    YACU_ASSERT_APPROX_EQ_DBL(testRun, recordState.consumed[1], 3., 1e-3);
-    YACU_ASSERT_APPROX_EQ_DBL(testRun, recordState.consumed[2], 6., 1e-3);
 }
 
 typedef struct LargerResultsState
@@ -75,9 +72,9 @@ typedef struct LargerResultsState
 void on_larger_token_produced(const CsdfGraph *graph, void *recordState, size_t actorId, void *produced)
 {
     UNUSED(graph);
-    UNUSED(recordState);
-    UNUSED(actorId);
     UNUSED(produced);
+    LargerResultsState *largerResultsState = recordState;
+    largerResultsState->fired[actorId]++;
 }
 
 void test_larger_sequential_iteration(YacuTestRun *testRun)
@@ -86,9 +83,9 @@ void test_larger_sequential_iteration(YacuTestRun *testRun)
     CsdfRecordOptions options = {
         .on_token_produced = on_larger_token_produced,
         .recordState = &recordState};
-    CsdfGraphState *state = new_sequential_state(&LARGER_GRAPH);
-    bool iterationCompleted = sequential_iteration(&options, state);
-    delete_sequential_state(state);
+    CsdfSequentialRun *runData = new_sequential_run(&LARGER_GRAPH, &options);
+    bool iterationCompleted = sequential_iteration(runData);
+    delete_sequential_run(runData);
     YACU_ASSERT_TRUE(testRun, iterationCompleted);
     YACU_ASSERT_EQ_UINT(testRun, recordState.fired[0], 2);
     YACU_ASSERT_EQ_UINT(testRun, recordState.fired[1], 1);
@@ -97,9 +94,9 @@ void test_larger_sequential_iteration(YacuTestRun *testRun)
 void test_larger_produced_record(YacuTestRun *testRun)
 {
     CsdfRecordOptions *recordOptions = new_record_produced_options(&LARGER_GRAPH, 100);
-    CsdfGraphState *state = new_sequential_state(&LARGER_GRAPH);
-    bool iterationCompleted = sequential_iteration(recordOptions, state);
-    delete_sequential_state(state);
+    CsdfSequentialRun *runData = new_sequential_run(&LARGER_GRAPH, recordOptions);
+    bool iterationCompleted = sequential_iteration(runData);
+    delete_sequential_run(runData);
 
     int *leftIntOutputProducedTokens = new_record_storage(recordOptions, 0, 1);
     copy_recorded_produced_tokens(recordOptions, 0, 1, leftIntOutputProducedTokens);
