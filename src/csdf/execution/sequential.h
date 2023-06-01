@@ -9,8 +9,8 @@ Copyright (c) 2023 Slaven Glumac
 #ifndef CSDF_SEQUENTIAL_H
 #define CSDF_SEQUENTIAL_H
 
-#include "graph.h"
-#include "record.h"
+#include <csdf/graph.h>
+#include <csdf/record.h>
 
 #include <stddef.h>
 #include <stdbool.h>

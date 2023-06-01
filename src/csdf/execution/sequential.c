@@ -6,7 +6,7 @@ MIT License
 Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
-#include <csdf/sequential.h>
+#include "sequential.h"
 #include <csdf/repetition.h>
 
 #include <stdlib.h>

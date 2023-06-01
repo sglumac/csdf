@@ -9,7 +9,7 @@ Copyright (c) 2023 Slaven Glumac
 #include <suites/sequential.h>
 #include <samples/simple.h>
 #include <samples/larger.h>
-#include <csdf/sequential.h>
+#include <csdf/execution/sequential.h>
 
 #define UNUSED(x) (void)(x)
 
