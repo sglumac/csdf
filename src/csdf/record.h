@@ -14,13 +14,11 @@ Copyright (c) 2023 Slaven Glumac
 #include <stdbool.h>
 
 typedef void (*CsdfOnTokenProduced)(const CsdfGraph *graph, void *recordState, size_t actorId, void *produced);
-typedef void (*CsdfOnTokenConsumed)(const CsdfGraph *graph, void *recordState, size_t actorId, void *consumed);
 
 typedef struct CsdfRecordOptions
 {
     void *recordState;
     CsdfOnTokenProduced on_token_produced;
-    CsdfOnTokenConsumed on_token_consumed;
 } CsdfRecordOptions;
 
 CsdfRecordOptions *new_record_produced_options(const CsdfGraph *graph, size_t maxTokens);

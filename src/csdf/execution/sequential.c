@@ -204,12 +204,7 @@ void produce(CsdfGraphState *state, size_t actorId)
 static void record_results(const CsdfRecordOptions *recordOptions, CsdfGraphState *state, size_t actorId)
 {
     uint8_t *produced = state->produced[actorId];
-    uint8_t *consumed = state->consumed[actorId];
 
-    if (recordOptions->on_token_consumed != NULL)
-    {
-        recordOptions->on_token_consumed(state->graph, recordOptions->recordState, actorId, consumed);
-    }
     if (recordOptions->on_token_produced != NULL)
     {
         recordOptions->on_token_produced(state->graph, recordOptions->recordState, actorId, produced);

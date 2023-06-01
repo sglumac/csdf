@@ -33,24 +33,10 @@ void on_simple_token_produced(const CsdfGraph *graph, void *recordState, size_t 
     }
 }
 
-void on_simple_token_consumed(const CsdfGraph *graph, void *recordState, size_t actorId, void *consumed)
-{
-    UNUSED(graph);
-    SimpleResultsState *sampleResultsState = recordState;
-    const CsdfActor *actor = &graph->actors[actorId];
-    sampleResultsState->fired[actorId] = true;
-    if (actor->numInputs > 0)
-    {
-        double *token = consumed;
-        sampleResultsState->consumed[actorId] = *token;
-    }
-}
-
 void test_simple_fire(YacuTestRun *testRun)
 {
     SimpleResultsState recordState = {.fired = {false}, .consumed = {0.}, .produced = {0.}};
     CsdfRecordOptions options = {
-        .on_token_consumed = on_simple_token_consumed,
         .on_token_produced = on_simple_token_produced,
         .recordState = &recordState};
     CsdfGraphState *state = new_sequential_state(&SIMPLE_GRAPH);
@@ -66,7 +52,6 @@ void test_simple_sequential_iteration(YacuTestRun *testRun)
 {
     SimpleResultsState recordState = {.fired = {false}, .consumed = {0.}, .produced = {0.}};
     CsdfRecordOptions options = {
-        .on_token_consumed = on_simple_token_consumed,
         .on_token_produced = on_simple_token_produced,
         .recordState = &recordState};
     CsdfGraphState *state = new_sequential_state(&SIMPLE_GRAPH);
@@ -95,19 +80,10 @@ void on_larger_token_produced(const CsdfGraph *graph, void *recordState, size_t 
     UNUSED(produced);
 }
 
-void on_larger_token_consumed(const CsdfGraph *graph, void *recordState, size_t actorId, void *consumed)
-{
-    UNUSED(graph);
-    UNUSED(consumed);
-    LargerResultsState *largerResultsState = recordState;
-    largerResultsState->fired[actorId]++;
-}
-
 void test_larger_sequential_iteration(YacuTestRun *testRun)
 {
     LargerResultsState recordState = {.fired = {0}};
     CsdfRecordOptions options = {
-        .on_token_consumed = on_larger_token_consumed,
         .on_token_produced = on_larger_token_produced,
         .recordState = &recordState};
     CsdfGraphState *state = new_sequential_state(&LARGER_GRAPH);

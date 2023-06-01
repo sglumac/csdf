@@ -61,7 +61,6 @@ CsdfRecordOptions *new_record_produced_options(const CsdfGraph *graph, size_t ma
 
     recordOptions->recordState = state;
     recordOptions->on_token_produced = store_produced_tokens;
-    recordOptions->on_token_consumed = NULL;
     return recordOptions;
 }
 
