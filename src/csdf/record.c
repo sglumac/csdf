@@ -38,7 +38,7 @@ CsdfRecordData *new_record_produced(const CsdfActor *actor, size_t numExecutions
     recordData->actor = actor;
     recordData->recordedResults = malloc(actor->numOutputs * sizeof(uint8_t *));
     recordData->executionsRecorded = 0;
-    recordData->maxExecutions = 0;
+    recordData->maxExecutions = numExecutions;
 
     for (size_t outputId = 0; outputId < actor->numOutputs; outputId++)
     {
@@ -80,6 +80,7 @@ void copy_recorded_tokens(const CsdfRecordData *recordData, size_t outputId, voi
     const CsdfOutput *output = recordData->actor->outputs + outputId;
     size_t resultsSize = recordData->executionsRecorded * output->production * output->tokenSize;
     memcpy(
+        recordStorage,
         recordData->recordedResults[outputId],
-        recordStorage, resultsSize);
+        resultsSize);
 }

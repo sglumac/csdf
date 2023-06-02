@@ -12,13 +12,13 @@ Copyright (c) 2023 Slaven Glumac
 #include <stdlib.h>
 
 static void get_rate_ratio(
-    const CsdfGraph *graph, const CsdfBuffer *buffer,
+    const CsdfGraph *graph, const CsdfConnection *connection,
     unsigned int *production,
     unsigned int *consumption)
 {
-    const CsdfInputId *dstId = &buffer->destination;
+    const CsdfInputId *dstId = &connection->destination;
     const CsdfInput *dstPort = &graph->actors[dstId->actorId].inputs[dstId->inputId];
-    const CsdfOutputId *srcId = &buffer->source;
+    const CsdfOutputId *srcId = &connection->source;
     const CsdfOutput *srcPort = &graph->actors[srcId->actorId].outputs[srcId->outputId];
     *production = srcPort->production;
     *consumption = dstPort->consumption;
@@ -28,14 +28,14 @@ static bool fill_candidate_vector(
     const CsdfGraph *graph, size_t pivotId,
     Rational *candidateVector)
 {
-    for (size_t bufferId = 0; bufferId < graph->numBuffers; bufferId++)
+    for (size_t connectionId = 0; connectionId < graph->numConnections; connectionId++)
     {
-        const CsdfBuffer *buffer = &graph->buffers[bufferId];
-        Rational *dstVal = &candidateVector[buffer->destination.actorId];
-        Rational *srcVal = &candidateVector[buffer->source.actorId];
+        const CsdfConnection *connection = &graph->connections[connectionId];
+        Rational *dstVal = &candidateVector[connection->destination.actorId];
+        Rational *srcVal = &candidateVector[connection->source.actorId];
         unsigned int production, consumption;
-        get_rate_ratio(graph, buffer, &production, &consumption);
-        if (buffer->source.actorId == pivotId)
+        get_rate_ratio(graph, connection, &production, &consumption);
+        if (connection->source.actorId == pivotId)
         {
             unsigned int dstNum = srcVal->num * production;
             unsigned int dstDen = srcVal->den * consumption;
@@ -43,7 +43,7 @@ static bool fill_candidate_vector(
             if (is_rational_zero(dstVal))
             {
                 set_reduce_rational_value(dstVal, dstNum, dstDen);
-                if (!fill_candidate_vector(graph, buffer->destination.actorId, candidateVector))
+                if (!fill_candidate_vector(graph, connection->destination.actorId, candidateVector))
                 {
                     return false;
                 }
@@ -56,14 +56,14 @@ static bool fill_candidate_vector(
                 }
             }
         }
-        if (buffer->destination.actorId == pivotId)
+        if (connection->destination.actorId == pivotId)
         {
             unsigned int srcNum = dstVal->num * consumption;
             unsigned int srcDen = dstVal->den * production;
             if (is_rational_zero(srcVal))
             {
                 set_reduce_rational_value(srcVal, srcNum, srcDen);
-                if (!fill_candidate_vector(graph, buffer->source.actorId, candidateVector))
+                if (!fill_candidate_vector(graph, connection->source.actorId, candidateVector))
                 {
                     return false;
                 }

@@ -120,7 +120,7 @@ static char charRight2Left[] = {'a', 'b', 'c', 'd', 'e', 'f'};
         .initialTokens = charRight2Left              \
     }
 
-static CsdfBuffer buffers[] = {
+static CsdfConnection connections[] = {
     DOUBLE_LEFT_TO_RIGHT,
     INT_LEFT_TO_RIGHT,
     CHAR_RIGHT_TO_LEFT,
@@ -129,5 +129,5 @@ static CsdfBuffer buffers[] = {
 const CsdfGraph LARGER_GRAPH = {
     .actors = ACTORS,
     .numActors = 2,
-    .buffers = buffers,
-    .numBuffers = 4};
+    .connections = connections,
+    .numConnections = 4};

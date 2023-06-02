@@ -88,12 +88,12 @@ static CsdfActor ACTORS[3] = {THREE_CONSTANT, DOUBLE_GAIN, SINK};
         .actorId = SINK_ID, .inputId = 0 \
     }
 
-static CsdfBuffer buffers[] = {
+static CsdfConnection connections[] = {
     {.source = CONSTANT_SOURCE, .destination = GAIN_DESTINATION, .tokenSize = sizeof(double), .numTokens = 0, .initialTokens = NULL},
     {.source = GAIN_SOURCE, .destination = SINK_DESTINATION, .tokenSize = sizeof(double), .numTokens = 0, .initialTokens = NULL}};
 
 const CsdfGraph SIMPLE_GRAPH = {
     .actors = ACTORS,
     .numActors = 3,
-    .buffers = buffers,
-    .numBuffers = 2};
+    .connections = connections,
+    .numConnections = 2};

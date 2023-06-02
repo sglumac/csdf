@@ -16,36 +16,31 @@ Copyright (c) 2023 Slaven Glumac
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct CsdfBufferState
+typedef struct CsdfSequentialBuffer
 {
-    const CsdfBuffer *buffer;
+    const CsdfConnection *connection;
     size_t start;
     size_t end;
     size_t bufferSize;
     uint8_t *tokens;
-} CsdfBufferState;
-
-typedef unsigned int (*NumberTokensGetter)(void *buffer);
+} CsdfSequentialBuffer;
 
 typedef struct CsdfActorRun
 {
-    CsdfActor *actor;
-    size_t actorId;
+    const CsdfActor *actor;
     uint8_t *consumed;
     uint8_t *produced;
     CsdfRecordData *recordData;
-    void **inputBuffers;
-    void **outputBuffers;
-    NumberTokensGetter get_number_tokens;
+    CsdfSequentialBuffer **inputBuffers;
+    CsdfSequentialBuffer **outputBuffers;
 } CsdfActorRun;
 
 typedef struct CsdfSequentialRun
 {
     const CsdfGraph *graph;
     unsigned int *repetitionVector;
-    CsdfBufferState *bufferStates;
+    CsdfSequentialBuffer *bufferStates;
     CsdfActorRun **actorRuns;
-    CsdfRecordData *recordData;
 } CsdfSequentialRun;
 
 CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations);

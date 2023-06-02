@@ -15,10 +15,10 @@ void test_simple_sequential_iteration(YacuTestRun *testRun)
 {
     CsdfSequentialRun *runData = new_sequential_run(&SIMPLE_GRAPH, 1);
     bool iterationCompleted = sequential_iteration(runData);
-    double *constantOutput = new_record_storage(runData->recordData, 0);
-    double *gainOutput = new_record_storage(runData->recordData + 1, 0);
-    copy_recorded_tokens(runData->recordData, 0, constantOutput);
-    copy_recorded_tokens(runData->recordData, 0, gainOutput);
+    double *constantOutput = new_record_storage(runData->actorRuns[0]->recordData, 0);
+    double *gainOutput = new_record_storage(runData->actorRuns[1]->recordData, 0);
+    copy_recorded_tokens(runData->actorRuns[0]->recordData, 0, constantOutput);
+    copy_recorded_tokens(runData->actorRuns[1]->recordData, 0, gainOutput);
     YACU_ASSERT_TRUE(testRun, iterationCompleted);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, constantOutput[0], 3., 1e-3);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, gainOutput[0], 6., 1e-3);
@@ -41,8 +41,8 @@ void test_larger_produced_record(YacuTestRun *testRun)
 
     YACU_ASSERT_TRUE(testRun, sequential_iteration(runData));
 
-    int *leftIntOutputProducedTokens = new_record_storage(runData->recordData, 1);
-    copy_recorded_tokens(runData->recordData, 1, leftIntOutputProducedTokens);
+    int *leftIntOutputProducedTokens = new_record_storage(runData->actorRuns[0]->recordData, 1);
+    copy_recorded_tokens(runData->actorRuns[0]->recordData, 1, leftIntOutputProducedTokens);
     YACU_ASSERT_EQ_INT(testRun, leftIntOutputProducedTokens[0], 2);
     for (size_t i = 1; i < 7; i++)
     {
@@ -55,8 +55,8 @@ void test_larger_produced_record(YacuTestRun *testRun)
     }
     delete_record_storage(leftIntOutputProducedTokens);
 
-    double *leftDoubleOutputProducedTokens = new_record_storage(runData->recordData, 0);
-    copy_recorded_tokens(runData->recordData, 0, leftDoubleOutputProducedTokens);
+    double *leftDoubleOutputProducedTokens = new_record_storage(runData->actorRuns[0]->recordData, 0);
+    copy_recorded_tokens(runData->actorRuns[0]->recordData, 0, leftDoubleOutputProducedTokens);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, leftDoubleOutputProducedTokens[0], (double)'a', 1e-3);
     YACU_ASSERT_APPROX_EQ_DBL(testRun, leftDoubleOutputProducedTokens[1], (double)'b', 1e-3);
     for (size_t i = 2; i < 5; i++)
@@ -70,8 +70,8 @@ void test_larger_produced_record(YacuTestRun *testRun)
         YACU_ASSERT_APPROX_EQ_DBL(testRun, leftDoubleOutputProducedTokens[i], (double)'f', 1e-3);
     }
 
-    char *rightCharOutputProducedTokens = new_record_storage(runData->recordData + 1, 0);
-    copy_recorded_tokens(runData->recordData + 1, 0, rightCharOutputProducedTokens);
+    char *rightCharOutputProducedTokens = new_record_storage(runData->actorRuns[1]->recordData + 1, 0);
+    copy_recorded_tokens(runData->actorRuns[1]->recordData + 1, 0, rightCharOutputProducedTokens);
     for (size_t i = 0; i < 3; i++)
     {
         YACU_ASSERT_EQ_CHAR(testRun, rightCharOutputProducedTokens[i], (char)leftDoubleOutputProducedTokens[i]);
@@ -80,8 +80,8 @@ void test_larger_produced_record(YacuTestRun *testRun)
     delete_record_storage(leftDoubleOutputProducedTokens);
     delete_record_storage(rightCharOutputProducedTokens);
 
-    int *rightIntOutputProducedTokens = new_record_storage(runData->recordData + 1, 1);
-    copy_recorded_tokens(runData->recordData + 1, 1, rightIntOutputProducedTokens);
+    int *rightIntOutputProducedTokens = new_record_storage(runData->actorRuns[1]->recordData + 1, 1);
+    copy_recorded_tokens(runData->actorRuns[1]->recordData + 1, 1, rightIntOutputProducedTokens);
     YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[0], 2);
     YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[1], 3);
     YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[2], 5);
