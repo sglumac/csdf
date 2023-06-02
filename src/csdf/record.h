@@ -12,23 +12,29 @@ Copyright (c) 2023 Slaven Glumac
 #include "graph.h"
 
 #include <stdbool.h>
+#include <stdint.h>
 
-typedef void (*CsdfOnTokenProduced)(const CsdfGraph *graph, void *recordState, size_t actorId, void *produced);
+typedef struct CsdfRecordData CsdfRecordData;
 
-typedef struct CsdfRecordOptions
+typedef void (*CsdfOnTokenProduced)(const uint8_t *produced, CsdfRecordData *recordData);
+
+struct CsdfRecordData
 {
-    void *recordState;
+    const CsdfActor *actor;
+    uint8_t **recordedResults;
     CsdfOnTokenProduced on_token_produced;
-} CsdfRecordOptions;
+    size_t maxExecutions;
+    size_t executionsRecorded;
+};
 
-CsdfRecordOptions *new_record_produced_options(const CsdfGraph *graph, size_t maxTokens);
+CsdfRecordData *new_record_produced(const CsdfActor *actor, size_t numExecutions);
 
-void delete_record_produced_options(const CsdfGraph *graph, CsdfRecordOptions *recordOptions);
+void delete_record_produced(CsdfRecordData *recordData);
 
-void *new_record_storage(const CsdfRecordOptions *recordOptions, size_t actorId, size_t outputId);
+void *new_record_storage(const CsdfRecordData *recordData, size_t outputId);
 
 void delete_record_storage(void *recordStorage);
 
-void copy_recorded_produced_tokens(const CsdfRecordOptions *recordOptions, size_t actorId, size_t outputId, void *recordStorage);
+void copy_recorded_tokens(const CsdfRecordData *recordData, size_t outputId, void *recordStorage);
 
 #endif // CSDF_RECORD_H
