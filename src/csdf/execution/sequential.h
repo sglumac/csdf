@@ -6,24 +6,16 @@ MIT License
 Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
-#ifndef CSDF_SEQUENTIAL_H
-#define CSDF_SEQUENTIAL_H
+#ifndef CSDF_EXECUTION_SEQUENTIAL_H
+#define CSDF_EXECUTION_SEQUENTIAL_H
 
 #include <csdf/graph.h>
 #include <csdf/record.h>
+#include <csdf/execution/buffer.h>
 
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-typedef struct CsdfSequentialBuffer
-{
-    const CsdfConnection *connection;
-    size_t start;
-    size_t end;
-    size_t maxTokens;
-    uint8_t *tokens;
-} CsdfSequentialBuffer;
 
 typedef struct CsdfActorRun
 {
@@ -31,15 +23,15 @@ typedef struct CsdfActorRun
     uint8_t *consumed;
     uint8_t *produced;
     CsdfRecordData *recordData;
-    CsdfSequentialBuffer **inputBuffers;
-    CsdfSequentialBuffer **outputBuffers;
+    CsdfBuffer **inputBuffers;
+    CsdfBuffer **outputBuffers;
 } CsdfActorRun;
 
 typedef struct CsdfSequentialRun
 {
     const CsdfGraph *graph;
     unsigned int *repetitionVector;
-    CsdfSequentialBuffer *buffers;
+    CsdfBuffer *buffers;
     CsdfActorRun **actorRuns;
 } CsdfSequentialRun;
 
@@ -53,4 +45,4 @@ void fire(CsdfActorRun *runData);
 
 bool sequential_iteration(CsdfSequentialRun *runData);
 
-#endif // CSDF_SEQUENTIAL_H
+#endif // CSDF_EXECUTION_SEQUENTIAL_H

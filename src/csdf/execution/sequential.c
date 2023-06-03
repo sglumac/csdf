@@ -7,70 +7,100 @@ Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
 #include "sequential.h"
+#include "buffer.h"
 #include <csdf/repetition.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 
-static void push(CsdfSequentialBuffer *buffer, const void *token)
+typedef struct CsdfSequentialBufferData
 {
+    const CsdfConnection *connection;
+    size_t start;
+    size_t end;
+    size_t maxTokens;
+    uint8_t *tokens;
+} CsdfSequentialBufferData;
+
+static void push(CsdfBuffer *buffer, const uint8_t *token)
+{
+    CsdfSequentialBufferData *data = buffer->data;
     size_t tokenSize = buffer->connection->tokenSize;
-    uint8_t *bufferEnd = buffer->tokens + tokenSize * buffer->end;
+    uint8_t *bufferEnd = data->tokens + tokenSize * data->end;
     memcpy(bufferEnd, token, tokenSize);
-    buffer->end = (buffer->end + 1) % buffer->maxTokens;
-    if (buffer->end == buffer->start)
+    data->end = (data->end + 1) % data->maxTokens;
+    if (data->end == data->start)
     {
         exit(-123);
     }
 }
 
-static uint8_t *pop(CsdfSequentialBuffer *buffer)
+static void pop(CsdfBuffer *buffer, uint8_t *token)
 {
+    CsdfSequentialBufferData *data = buffer->data;
     size_t tokenSize = buffer->connection->tokenSize;
-    uint8_t *bufferStart = buffer->tokens + tokenSize * buffer->start;
-    buffer->start = (buffer->start + 1) % buffer->maxTokens;
-    return bufferStart;
+    uint8_t *bufferStart = data->tokens + tokenSize * data->start;
+    data->start = (data->start + 1) % data->maxTokens;
+    memcpy(token, bufferStart, buffer->connection->tokenSize);
 }
 
-static unsigned number_tokens(CsdfSequentialBuffer *buffer)
+static unsigned number_tokens(CsdfBuffer *buffer)
 {
-    const CsdfSequentialBuffer *state = buffer;
-    unsigned end = state->end;
-    unsigned start = state->start;
+    const CsdfSequentialBufferData *data = buffer->data;
+    unsigned end = data->end;
+    unsigned start = data->start;
 
     return end >= start
                ? end - start
-               : end + state->maxTokens - start;
+               : end + data->maxTokens - start;
 }
 
-static size_t calculate_buffer_max_tokens(CsdfSequentialRun *runData, const CsdfConnection *buffer)
+static size_t calculate_buffer_max_tokens(CsdfSequentialRun *runData, const CsdfConnection *connection)
 {
-    size_t numInitialTokens = buffer->numTokens;
-    size_t actorId = buffer->source.actorId;
+    size_t numInitialTokens = connection->numTokens;
+    size_t actorId = connection->source.actorId;
     const CsdfActor *actor = runData->graph->actors + actorId;
-    const CsdfOutput *output = actor->outputs + buffer->source.outputId;
+    const CsdfOutput *output = actor->outputs + connection->source.outputId;
     size_t potentiallyProducedTokens = runData->repetitionVector[actorId] * output->production;
     return numInitialTokens + 2 * potentiallyProducedTokens + 1;
 }
 
-static CsdfSequentialBuffer *new_buffers(CsdfSequentialRun *runData)
+static CsdfSequentialBufferData *new_buffer_data(CsdfSequentialRun *runData, const CsdfConnection *connection)
+{
+    CsdfSequentialBufferData *data = malloc(sizeof(CsdfSequentialBufferData));
+    data->start = 0;
+    data->end = 0;
+    size_t maxTokens = calculate_buffer_max_tokens(runData, connection);
+    data->tokens = malloc(maxTokens * connection->tokenSize);
+    data->maxTokens = maxTokens;
+    memcpy(data->tokens, connection->initialTokens, connection->numTokens * connection->tokenSize);
+    data->end = connection->numTokens;
+    return data;
+}
+
+static void free_buffer_data(void *bufferData)
+{
+    CsdfSequentialBufferData *data = bufferData;
+    free(data->tokens);
+    free(data);
+}
+
+static CsdfBuffer *new_buffers(CsdfSequentialRun *runData)
 {
     const CsdfGraph *graph = runData->graph;
-    CsdfSequentialBuffer *buffers = malloc(graph->numConnections * sizeof(CsdfSequentialBuffer));
+    CsdfBuffer *buffers = malloc(graph->numConnections * sizeof(CsdfBuffer));
     for (size_t bufferId = 0; bufferId < graph->numConnections; bufferId++)
     {
         const CsdfConnection *connection = graph->connections + bufferId;
-        const uint8_t *bufferInitialTokens = connection->initialTokens;
-        CsdfSequentialBuffer *buffer = &buffers[bufferId];
+
+        CsdfBuffer *buffer = &buffers[bufferId];
         buffer->connection = connection;
-        buffer->start = 0;
-        buffer->end = 0;
-        size_t bufferMaxTokens = calculate_buffer_max_tokens(runData, connection);
-        buffer->tokens = malloc(bufferMaxTokens * connection->tokenSize);
-        buffer->maxTokens = bufferMaxTokens;
-        memcpy(buffer->tokens, bufferInitialTokens, connection->numTokens * connection->tokenSize);
-        buffer->end = connection->numTokens;
+        buffer->data = new_buffer_data(runData, connection);
+        buffer->pop = pop;
+        buffer->push = push;
+        buffer->numberOfTokens = number_tokens;
+        buffer->freeData = free_buffer_data;
     }
     return buffers;
 }
@@ -95,17 +125,17 @@ CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData)
     }
     actorRun->produced = malloc(sizeProducedTokens);
     actorRun->recordData = recordData;
-    actorRun->inputBuffers = malloc(actor->numInputs * sizeof(CsdfSequentialBuffer *));
-    actorRun->outputBuffers = malloc(actor->numOutputs * sizeof(CsdfSequentialBuffer *));
+    actorRun->inputBuffers = malloc(actor->numInputs * sizeof(CsdfBuffer *));
+    actorRun->outputBuffers = malloc(actor->numOutputs * sizeof(CsdfBuffer *));
     return actorRun;
 }
 
-void set_input_buffer(CsdfActorRun *actorRun, size_t inputId, CsdfSequentialBuffer *buffer)
+void set_input_buffer(CsdfActorRun *actorRun, size_t inputId, CsdfBuffer *buffer)
 {
     actorRun->inputBuffers[inputId] = buffer;
 }
 
-void set_output_buffer(CsdfActorRun *actorRun, size_t outputId, void *buffer)
+void set_output_buffer(CsdfActorRun *actorRun, size_t outputId, CsdfBuffer *buffer)
 {
     actorRun->outputBuffers[outputId] = buffer;
 }
@@ -155,8 +185,8 @@ void delete_sequential_run(CsdfSequentialRun *runData)
 {
     for (size_t bufferId = 0; bufferId < runData->graph->numConnections; bufferId++)
     {
-        CsdfSequentialBuffer *bufferState = &runData->buffers[bufferId];
-        free(bufferState->tokens);
+        CsdfBuffer *buffer = &runData->buffers[bufferId];
+        buffer->freeData(buffer->data);
     }
     for (size_t actorId = 0; actorId < runData->graph->numActors; actorId++)
     {
@@ -177,11 +207,11 @@ bool can_fire(CsdfActorRun *runData)
     for (size_t dstPortId = 0; dstPortId < actor->numInputs; dstPortId++)
     {
 
-        CsdfSequentialBuffer *buffer = runData->inputBuffers[dstPortId];
+        CsdfBuffer *buffer = runData->inputBuffers[dstPortId];
 
         const CsdfInput *dstPort = &actor->inputs[dstPortId];
 
-        if (dstPort->consumption > number_tokens(buffer))
+        if (dstPort->consumption > buffer->numberOfTokens(buffer))
         {
 
             return false;
@@ -196,14 +226,16 @@ static void consume(CsdfActorRun *runData)
     const CsdfActor *actor = runData->actor;
     for (size_t dstPortId = 0; dstPortId < actor->numInputs; dstPortId++)
     {
-        CsdfSequentialBuffer *buffer = runData->inputBuffers[dstPortId];
+        CsdfBuffer *buffer = runData->inputBuffers[dstPortId];
         const CsdfInput *dstPort = actor->inputs + dstPortId;
+        uint8_t *token = malloc(dstPort->tokenSize);
         for (size_t tokenId = 0; tokenId < dstPort->consumption; tokenId++)
         {
-            uint8_t *token = pop(buffer);
+            buffer->pop(buffer, token);
             memcpy(consumed, token, dstPort->tokenSize);
             consumed += dstPort->tokenSize;
         }
+        free(token);
     }
 }
 
@@ -212,23 +244,20 @@ void produce(CsdfActorRun *runData)
 
     const CsdfActor *actor = runData->actor;
     uint8_t *produced = runData->produced;
-    uint8_t *producedForBuffer = produced;
+    uint8_t *token = produced;
     const CsdfOutput *output = actor->outputs;
-
-    size_t productionSize = 0;
 
     for (
         size_t outputId = 0;
         outputId < actor->numOutputs;
         outputId++, output++)
     {
-        CsdfSequentialBuffer *buffer = runData->outputBuffers[outputId];
+        CsdfBuffer *buffer = runData->outputBuffers[outputId];
         for (size_t tokenId = 0; tokenId < output->production; tokenId++)
         {
-            push(buffer, producedForBuffer);
+            buffer->push(buffer, token);
 
-            producedForBuffer += output->tokenSize;
-            productionSize += output->tokenSize;
+            token += output->tokenSize;
         }
     }
 }
