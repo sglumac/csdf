@@ -162,6 +162,7 @@ void delete_sequential_run(CsdfSequentialRun *runData)
     }
     for (size_t actorId = 0; actorId < runData->graph->numActors; actorId++)
     {
+        delete_record_produced(runData->actorRuns[actorId]->recordData);
         delete_actor_run(runData->actorRuns[actorId]);
     }
     free(runData->bufferStates);
