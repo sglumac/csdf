@@ -79,7 +79,7 @@ static CsdfSequentialBuffer *new_buffer_states(CsdfSequentialRun *runData)
 
 CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData)
 {
-    CsdfActorRun *actorRun = malloc(sizeof(CsdfActor));
+    CsdfActorRun *actorRun = malloc(sizeof(CsdfActorRun));
     actorRun->actor = actor;
     size_t sizeConsumedTokens = 0;
     for (size_t inputId = 0; inputId < actor->numInputs; inputId++)
@@ -146,9 +146,11 @@ CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterat
 
 void delete_actor_run(CsdfActorRun *runData)
 {
+    free(runData->produced);
     free(runData->consumed);
     free(runData->inputBuffers);
     free(runData->outputBuffers);
+    free(runData);
 }
 
 void delete_sequential_run(CsdfSequentialRun *runData)
@@ -158,8 +160,13 @@ void delete_sequential_run(CsdfSequentialRun *runData)
         CsdfSequentialBuffer *bufferState = &runData->bufferStates[bufferId];
         free(bufferState->tokens);
     }
+    for (size_t actorId = 0; actorId < runData->graph->numActors; actorId++)
+    {
+        delete_actor_run(runData->actorRuns[actorId]);
+    }
     free(runData->bufferStates);
     free(runData->repetitionVector);
+    free(runData->actorRuns);
     free(runData);
 }
 
