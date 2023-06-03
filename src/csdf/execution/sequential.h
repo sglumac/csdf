@@ -21,7 +21,7 @@ typedef struct CsdfSequentialBuffer
     const CsdfConnection *connection;
     size_t start;
     size_t end;
-    size_t bufferSize;
+    size_t maxTokens;
     uint8_t *tokens;
 } CsdfSequentialBuffer;
 
@@ -39,7 +39,7 @@ typedef struct CsdfSequentialRun
 {
     const CsdfGraph *graph;
     unsigned int *repetitionVector;
-    CsdfSequentialBuffer *bufferStates;
+    CsdfSequentialBuffer *buffers;
     CsdfActorRun **actorRuns;
 } CsdfSequentialRun;
 
