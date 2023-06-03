@@ -7,9 +7,61 @@ Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
 #include "repetition.h"
-#include "utility.h"
 
 #include <stdlib.h>
+
+typedef struct Rational
+{
+    unsigned int num;
+    unsigned int den;
+} Rational;
+
+static unsigned int gcd(unsigned int a, unsigned int b)
+{
+    int temp;
+    while (b != 0)
+    {
+        temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a;
+}
+
+static unsigned int lcm(unsigned int a, unsigned int b)
+{
+    unsigned int result = (a * b) / gcd(a, b);
+    return result;
+}
+
+static void set_rational_value(Rational *rational, unsigned int num, unsigned int den)
+{
+    rational->num = num;
+    rational->den = den;
+}
+
+static void reduce_rational_value(Rational *rational)
+{
+    unsigned int div = gcd(rational->num, rational->den);
+    rational->num /= div;
+    rational->den /= div;
+}
+
+static void set_reduce_rational_value(Rational *rational, unsigned int num, unsigned int den)
+{
+    set_rational_value(rational, num, den);
+    reduce_rational_value(rational);
+}
+
+static bool is_rational_zero(const Rational *rational)
+{
+    return rational->num == 0;
+}
+
+static unsigned int rational_eq(const Rational *rational, unsigned int num, unsigned int den)
+{
+    return rational->num * den == rational->den * num;
+}
 
 static void get_rate_ratio(
     const CsdfGraph *graph, const CsdfConnection *connection,
