@@ -11,21 +11,12 @@ Copyright (c) 2023 Slaven Glumac
 
 #include <csdf/graph.h>
 #include <csdf/record.h>
+#include <csdf/execution/actor.h>
 #include <csdf/execution/buffer.h>
 
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
-
-typedef struct CsdfActorRun
-{
-    const CsdfActor *actor;
-    uint8_t *consumed;
-    uint8_t *produced;
-    CsdfRecordData *recordData;
-    CsdfBuffer **inputBuffers;
-    CsdfBuffer **outputBuffers;
-} CsdfActorRun;
 
 typedef struct CsdfSequentialRun
 {
