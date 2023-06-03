@@ -34,4 +34,8 @@ bool can_fire(CsdfActorRun *runData);
 
 void fire(CsdfActorRun *runData);
 
+void set_input_buffer(CsdfActorRun *actorRun, size_t inputId, CsdfBuffer *buffer);
+
+void set_output_buffer(CsdfActorRun *actorRun, size_t outputId, CsdfBuffer *buffer);
+
 #endif // CSDF_EXECUTION_ACTOR_H

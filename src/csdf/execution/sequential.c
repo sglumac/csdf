@@ -106,16 +106,6 @@ static CsdfBuffer *new_buffers(CsdfSequentialRun *runData)
     return buffers;
 }
 
-void set_input_buffer(CsdfActorRun *actorRun, size_t inputId, CsdfBuffer *buffer)
-{
-    actorRun->inputBuffers[inputId] = buffer;
-}
-
-void set_output_buffer(CsdfActorRun *actorRun, size_t outputId, CsdfBuffer *buffer)
-{
-    actorRun->outputBuffers[outputId] = buffer;
-}
-
 CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations)
 {
     CsdfSequentialRun *runData = malloc(sizeof(CsdfSequentialRun));

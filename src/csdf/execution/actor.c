@@ -128,3 +128,13 @@ void delete_actor_run(CsdfActorRun *runData)
     free(runData->outputBuffers);
     free(runData);
 }
+
+void set_input_buffer(CsdfActorRun *actorRun, size_t inputId, CsdfBuffer *buffer)
+{
+    actorRun->inputBuffers[inputId] = buffer;
+}
+
+void set_output_buffer(CsdfActorRun *actorRun, size_t outputId, CsdfBuffer *buffer)
+{
+    actorRun->outputBuffers[outputId] = buffer;
+}
