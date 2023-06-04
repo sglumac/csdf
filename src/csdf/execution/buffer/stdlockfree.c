@@ -10,11 +10,16 @@ Copyright (c) 2023 Slaven Glumac
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdatomic.h>
+
+#if ATOMIC_LLONG_LOCK_FREE != 2
+#error "atomic_ullong not supported!"
+#endif
 
 typedef struct CsdfBufferStdLockFreeData
 {
-    size_t start;
-    size_t end;
+    atomic_size_t start;
+    atomic_size_t end;
     size_t maxTokens;
     uint8_t *tokens;
 } CsdfBufferStdLockFreeData;
@@ -22,22 +27,36 @@ typedef struct CsdfBufferStdLockFreeData
 static void buffer_push(CsdfBuffer *buffer, const uint8_t *token)
 {
     CsdfBufferStdLockFreeData *data = buffer->data;
+    size_t end = atomic_load(&data->end);
     size_t tokenSize = buffer->connection->tokenSize;
-    uint8_t *bufferEnd = data->tokens + tokenSize * data->end;
-    memcpy(bufferEnd, token, tokenSize);
-    data->end = (data->end + 1) % data->maxTokens;
-    if (data->end == data->start)
+    uint8_t *bufferEnd = data->tokens + tokenSize * end;
+    end = (end + 1) % data->maxTokens;
+    size_t start = atomic_load(&data->start);
+    if (end == start)
     {
-        exit(-123);
+        exit(123);
     }
+    memcpy(bufferEnd, token, tokenSize);
+    atomic_exchange(&data->end, end);
+}
+
+static void atomic_modulus(atomic_size_t *value, size_t divisor)
+{
+    size_t currentValue, remainder;
+    do
+    {
+        currentValue = atomic_load(value);
+        remainder = currentValue % divisor;
+    } while (!atomic_compare_exchange_weak(value, &currentValue, remainder));
 }
 
 static void buffer_pop(CsdfBuffer *buffer, uint8_t *token)
 {
     CsdfBufferStdLockFreeData *data = buffer->data;
-    uint8_t *bufferStart = data->tokens + buffer->connection->tokenSize * data->start;
-    data->start = (data->start + 1) % data->maxTokens;
+    size_t start = atomic_fetch_add(&data->start, 1);
+    uint8_t *bufferStart = data->tokens + buffer->connection->tokenSize * start;
     memcpy(token, bufferStart, buffer->connection->tokenSize);
+    atomic_modulus(&data->start, data->maxTokens);
 }
 
 static unsigned number_tokens(CsdfBuffer *buffer)
