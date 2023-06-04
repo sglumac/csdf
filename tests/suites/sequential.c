@@ -27,6 +27,25 @@ void test_simple_sequential_iteration(YacuTestRun *testRun)
     delete_sequential_run(runData);
 }
 
+void test_simple_sequential_run(YacuTestRun *testRun)
+{
+    CsdfSequentialRun *runData = new_sequential_run(&SIMPLE_GRAPH, 100);
+    bool iterationCompleted = sequential_run(runData);
+    double *constantOutput = new_record_storage(runData->actorRuns[0]->recordData, 0);
+    double *gainOutput = new_record_storage(runData->actorRuns[1]->recordData, 0);
+    copy_recorded_tokens(runData->actorRuns[0]->recordData, 0, constantOutput);
+    copy_recorded_tokens(runData->actorRuns[1]->recordData, 0, gainOutput);
+    YACU_ASSERT_TRUE(testRun, iterationCompleted);
+    for (size_t tokenId = 0; tokenId < 100; tokenId++)
+    {
+        YACU_ASSERT_APPROX_EQ_DBL(testRun, constantOutput[0], 3., 1e-3);
+        YACU_ASSERT_APPROX_EQ_DBL(testRun, gainOutput[0], 6., 1e-3);
+    }
+    delete_record_storage(constantOutput);
+    delete_record_storage(gainOutput);
+    delete_sequential_run(runData);
+}
+
 void test_larger_sequential_iteration(YacuTestRun *testRun)
 {
     CsdfSequentialRun *runData = new_sequential_run(&LARGER_GRAPH, 1);
@@ -93,6 +112,7 @@ void test_larger_produced_record(YacuTestRun *testRun)
 
 YacuTest sequentialTests[] = {
     {"SimpleSequentialIterationTest", &test_simple_sequential_iteration},
+    {"SimpleSequentialRun", &test_simple_sequential_run},
     {"LargerSequentialIterationTest", &test_larger_sequential_iteration},
     {"LargerProducedRecordTest", &test_larger_produced_record},
     END_OF_TESTS};
