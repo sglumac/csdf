@@ -82,10 +82,10 @@ void test_larger_produced_record(YacuTestRun *testRun)
 
     int *rightIntOutputProducedTokens = new_record_storage(runData->actorRuns[1]->recordData, 1);
     copy_recorded_tokens(runData->actorRuns[1]->recordData, 1, rightIntOutputProducedTokens);
-    // YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[0], 2);
-    // YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[1], 3);
-    // YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[2], 5);
-    // YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[3], 7);
+    YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[0], 2);
+    YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[1], 3);
+    YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[2], 5);
+    YACU_ASSERT_EQ_INT(testRun, rightIntOutputProducedTokens[3], 7);
     delete_record_storage(rightIntOutputProducedTokens);
 
     delete_sequential_run(runData);
