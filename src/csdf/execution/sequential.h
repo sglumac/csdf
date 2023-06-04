@@ -22,7 +22,7 @@ typedef struct CsdfSequentialRun
 {
     const CsdfGraph *graph;
     unsigned int *repetitionVector;
-    CsdfBuffer *buffers;
+    CsdfBuffer **buffers;
     CsdfActorRun **actorRuns;
 } CsdfSequentialRun;
 

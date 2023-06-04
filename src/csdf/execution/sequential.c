@@ -24,7 +24,7 @@ typedef struct CsdfSequentialBufferData
     uint8_t *tokens;
 } CsdfSequentialBufferData;
 
-static void push(CsdfBuffer *buffer, const uint8_t *token)
+static void buffer_push(CsdfBuffer *buffer, const uint8_t *token)
 {
     CsdfSequentialBufferData *data = buffer->data;
     size_t tokenSize = buffer->connection->tokenSize;
@@ -37,7 +37,7 @@ static void push(CsdfBuffer *buffer, const uint8_t *token)
     }
 }
 
-static void pop(CsdfBuffer *buffer, uint8_t *token)
+static void buffer_pop(CsdfBuffer *buffer, uint8_t *token)
 {
     CsdfSequentialBufferData *data = buffer->data;
     size_t tokenSize = buffer->connection->tokenSize;
@@ -87,40 +87,29 @@ static void free_buffer_data(void *bufferData)
     free(data);
 }
 
-static CsdfBuffer *new_buffers(CsdfSequentialRun *runData)
+static void create_buffers(CsdfSequentialRun *runData)
 {
     const CsdfGraph *graph = runData->graph;
-    CsdfBuffer *buffers = malloc(graph->numConnections * sizeof(CsdfBuffer));
+    runData->buffers = malloc(graph->numConnections * sizeof(CsdfBuffer *));
     for (size_t bufferId = 0; bufferId < graph->numConnections; bufferId++)
     {
         const CsdfConnection *connection = graph->connections + bufferId;
 
-        CsdfBuffer *buffer = &buffers[bufferId];
-        buffer->connection = connection;
-        buffer->data = new_buffer_data(runData, connection);
-        buffer->pop = pop;
-        buffer->push = push;
-        buffer->numberOfTokens = number_tokens;
-        buffer->freeData = free_buffer_data;
+        void *bufferData = new_buffer_data(runData, connection);
+        runData->buffers[bufferId] = new_buffer(connection, bufferData,
+                                                buffer_push, buffer_pop, number_tokens);
     }
-    return buffers;
 }
 
-CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations)
+static void create_actor_runs(CsdfSequentialRun *runData, unsigned numIterations)
 {
-    CsdfSequentialRun *runData = malloc(sizeof(CsdfSequentialRun));
-    runData->graph = graph;
-    unsigned int *repetitionVector = malloc(graph->numActors * sizeof(size_t));
-    csdf_repetition_vector(graph, repetitionVector);
-    runData->repetitionVector = repetitionVector;
-    runData->buffers = new_buffers(runData);
-
+    const CsdfGraph *graph = runData->graph;
     runData->actorRuns = malloc(graph->numActors * sizeof(CsdfActorRun *));
     for (size_t actorId = 0; actorId < graph->numActors; actorId++)
     {
         const CsdfActor *actor = graph->actors + actorId;
 
-        size_t numFirings = numIterations * repetitionVector[actorId];
+        size_t numFirings = numIterations * runData->repetitionVector[actorId];
         CsdfRecordData *recordData = new_record_produced(actor, numFirings);
 
         CsdfBuffer **inputBuffers = malloc(actor->numInputs * sizeof(CsdfBuffer *));
@@ -131,16 +120,27 @@ CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterat
             const CsdfConnection *connection = graph->connections + bufferId;
             if (connection->destination.actorId == actorId)
             {
-                inputBuffers[connection->destination.inputId] = runData->buffers + bufferId;
+                inputBuffers[connection->destination.inputId] = runData->buffers[bufferId];
             }
             if (connection->source.actorId == actorId)
             {
-                outputBuffers[connection->source.outputId] = runData->buffers + bufferId;
+                outputBuffers[connection->source.outputId] = runData->buffers[bufferId];
             }
         }
 
         runData->actorRuns[actorId] = new_actor_run(actor, recordData, inputBuffers, outputBuffers);
     }
+}
+
+CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations)
+{
+    CsdfSequentialRun *runData = malloc(sizeof(CsdfSequentialRun));
+    runData->graph = graph;
+    unsigned int *repetitionVector = malloc(graph->numActors * sizeof(size_t));
+    csdf_repetition_vector(graph, repetitionVector);
+    runData->repetitionVector = repetitionVector;
+    create_buffers(runData);
+    create_actor_runs(runData, numIterations);
     return runData;
 }
 
@@ -148,8 +148,9 @@ void delete_sequential_run(CsdfSequentialRun *runData)
 {
     for (size_t bufferId = 0; bufferId < runData->graph->numConnections; bufferId++)
     {
-        CsdfBuffer *buffer = &runData->buffers[bufferId];
-        buffer->freeData(buffer->data);
+        CsdfBuffer *buffer = runData->buffers[bufferId];
+        free_buffer_data(buffer->data);
+        delete_buffer(buffer);
     }
     for (size_t actorId = 0; actorId < runData->graph->numActors; actorId++)
     {

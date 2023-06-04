@@ -17,7 +17,6 @@ typedef struct CsdfBuffer CsdfBuffer;
 typedef void (*CsdfBufferPush)(CsdfBuffer *buffer, const uint8_t *token);
 typedef void (*CsdfBufferPop)(CsdfBuffer *buffer, uint8_t *token);
 typedef unsigned (*CsdfBufferNumberOfTokens)(CsdfBuffer *buffer);
-typedef void (*CsdfBufferFreeData)(void *bufferData);
 
 struct CsdfBuffer
 {
@@ -26,7 +25,12 @@ struct CsdfBuffer
     CsdfBufferPush push;
     CsdfBufferPop pop;
     CsdfBufferNumberOfTokens numberOfTokens;
-    CsdfBufferFreeData freeData;
 };
+
+CsdfBuffer *new_buffer(const CsdfConnection *connection, void *data,
+                       CsdfBufferPush push, CsdfBufferPop pop,
+                       CsdfBufferNumberOfTokens numberOfTokens);
+
+void delete_buffer(CsdfBuffer *buffer);
 
 #endif // CSDF_EXECUTION_BUFFER_H
