@@ -95,7 +95,7 @@ void fire(CsdfActorRun *runData)
     record_results(runData);
 }
 
-CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData)
+CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, CsdfBuffer **inputBuffers, CsdfBuffer **outputBuffers)
 {
     CsdfActorRun *actorRun = malloc(sizeof(CsdfActorRun));
     actorRun->actor = actor;
@@ -115,8 +115,8 @@ CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData)
     }
     actorRun->produced = malloc(sizeProducedTokens);
     actorRun->recordData = recordData;
-    actorRun->inputBuffers = malloc(actor->numInputs * sizeof(CsdfBuffer *));
-    actorRun->outputBuffers = malloc(actor->numOutputs * sizeof(CsdfBuffer *));
+    actorRun->inputBuffers = inputBuffers;
+    actorRun->outputBuffers = outputBuffers;
     return actorRun;
 }
 
@@ -124,17 +124,5 @@ void delete_actor_run(CsdfActorRun *runData)
 {
     free(runData->produced);
     free(runData->consumed);
-    free(runData->inputBuffers);
-    free(runData->outputBuffers);
     free(runData);
-}
-
-void set_input_buffer(CsdfActorRun *actorRun, size_t inputId, CsdfBuffer *buffer)
-{
-    actorRun->inputBuffers[inputId] = buffer;
-}
-
-void set_output_buffer(CsdfActorRun *actorRun, size_t outputId, CsdfBuffer *buffer)
-{
-    actorRun->outputBuffers[outputId] = buffer;
 }

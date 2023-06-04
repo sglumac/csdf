@@ -26,16 +26,12 @@ typedef struct CsdfActorRun
     CsdfBuffer **outputBuffers;
 } CsdfActorRun;
 
-CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData);
+CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, CsdfBuffer **inputBuffers, CsdfBuffer **outputBuffers);
 
 void delete_actor_run(CsdfActorRun *runData);
 
 bool can_fire(CsdfActorRun *runData);
 
 void fire(CsdfActorRun *runData);
-
-void set_input_buffer(CsdfActorRun *actorRun, size_t inputId, CsdfBuffer *buffer);
-
-void set_output_buffer(CsdfActorRun *actorRun, size_t outputId, CsdfBuffer *buffer);
 
 #endif // CSDF_EXECUTION_ACTOR_H

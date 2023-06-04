@@ -118,22 +118,28 @@ CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterat
     runData->actorRuns = malloc(graph->numActors * sizeof(CsdfActorRun *));
     for (size_t actorId = 0; actorId < graph->numActors; actorId++)
     {
-        size_t numFirings = numIterations * repetitionVector[actorId];
         const CsdfActor *actor = graph->actors + actorId;
-        CsdfActorRun *actorRun = new_actor_run(actor, new_record_produced(actor, numFirings));
-        runData->actorRuns[actorId] = actorRun;
+
+        size_t numFirings = numIterations * repetitionVector[actorId];
+        CsdfRecordData *recordData = new_record_produced(actor, numFirings);
+
+        CsdfBuffer **inputBuffers = malloc(actor->numInputs * sizeof(CsdfBuffer *));
+        CsdfBuffer **outputBuffers = malloc(actor->numOutputs * sizeof(CsdfBuffer *));
+
         for (size_t bufferId = 0; bufferId < graph->numConnections; bufferId++)
         {
             const CsdfConnection *connection = graph->connections + bufferId;
             if (connection->destination.actorId == actorId)
             {
-                set_input_buffer(actorRun, connection->destination.inputId, runData->buffers + bufferId);
+                inputBuffers[connection->destination.inputId] = runData->buffers + bufferId;
             }
             if (connection->source.actorId == actorId)
             {
-                set_output_buffer(actorRun, connection->source.outputId, runData->buffers + bufferId);
+                outputBuffers[connection->source.outputId] = runData->buffers + bufferId;
             }
         }
+
+        runData->actorRuns[actorId] = new_actor_run(actor, recordData, inputBuffers, outputBuffers);
     }
     return runData;
 }
@@ -147,8 +153,11 @@ void delete_sequential_run(CsdfSequentialRun *runData)
     }
     for (size_t actorId = 0; actorId < runData->graph->numActors; actorId++)
     {
-        delete_record_produced(runData->actorRuns[actorId]->recordData);
-        delete_actor_run(runData->actorRuns[actorId]);
+        CsdfActorRun *actorRun = runData->actorRuns[actorId];
+        delete_record_produced(actorRun->recordData);
+        free(actorRun->inputBuffers);
+        free(actorRun->outputBuffers);
+        delete_actor_run(actorRun);
     }
     free(runData->buffers);
     free(runData->repetitionVector);
