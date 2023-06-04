@@ -27,10 +27,4 @@ struct CsdfBuffer
     CsdfBufferNumberOfTokens numberOfTokens;
 };
 
-CsdfBuffer *new_buffer(const CsdfConnection *connection, void *data,
-                       CsdfBufferPush push, CsdfBufferPop pop,
-                       CsdfBufferNumberOfTokens numberOfTokens);
-
-void delete_buffer(CsdfBuffer *buffer);
-
 #endif // CSDF_EXECUTION_BUFFER_H

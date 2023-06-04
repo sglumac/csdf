@@ -7,55 +7,13 @@ Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
 #include "sequential.h"
-#include "buffer.h"
+#include "buffer/stdlockfree.h"
 #include "actor.h"
 #include <csdf/repetition.h>
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-
-typedef struct CsdfSequentialBufferData
-{
-    const CsdfConnection *connection;
-    size_t start;
-    size_t end;
-    size_t maxTokens;
-    uint8_t *tokens;
-} CsdfSequentialBufferData;
-
-static void buffer_push(CsdfBuffer *buffer, const uint8_t *token)
-{
-    CsdfSequentialBufferData *data = buffer->data;
-    size_t tokenSize = buffer->connection->tokenSize;
-    uint8_t *bufferEnd = data->tokens + tokenSize * data->end;
-    memcpy(bufferEnd, token, tokenSize);
-    data->end = (data->end + 1) % data->maxTokens;
-    if (data->end == data->start)
-    {
-        exit(-123);
-    }
-}
-
-static void buffer_pop(CsdfBuffer *buffer, uint8_t *token)
-{
-    CsdfSequentialBufferData *data = buffer->data;
-    size_t tokenSize = buffer->connection->tokenSize;
-    uint8_t *bufferStart = data->tokens + tokenSize * data->start;
-    data->start = (data->start + 1) % data->maxTokens;
-    memcpy(token, bufferStart, buffer->connection->tokenSize);
-}
-
-static unsigned number_tokens(CsdfBuffer *buffer)
-{
-    const CsdfSequentialBufferData *data = buffer->data;
-    unsigned end = data->end;
-    unsigned start = data->start;
-
-    return end >= start
-               ? end - start
-               : end + data->maxTokens - start;
-}
 
 static size_t calculate_buffer_max_tokens(CsdfSequentialRun *runData, const CsdfConnection *connection)
 {
@@ -67,26 +25,6 @@ static size_t calculate_buffer_max_tokens(CsdfSequentialRun *runData, const Csdf
     return numInitialTokens + 2 * potentiallyProducedTokens + 1;
 }
 
-static CsdfSequentialBufferData *new_buffer_data(CsdfSequentialRun *runData, const CsdfConnection *connection)
-{
-    CsdfSequentialBufferData *data = malloc(sizeof(CsdfSequentialBufferData));
-    data->start = 0;
-    data->end = 0;
-    size_t maxTokens = calculate_buffer_max_tokens(runData, connection);
-    data->tokens = malloc(maxTokens * connection->tokenSize);
-    data->maxTokens = maxTokens;
-    memcpy(data->tokens, connection->initialTokens, connection->numTokens * connection->tokenSize);
-    data->end = connection->numTokens;
-    return data;
-}
-
-static void free_buffer_data(void *bufferData)
-{
-    CsdfSequentialBufferData *data = bufferData;
-    free(data->tokens);
-    free(data);
-}
-
 static void create_buffers(CsdfSequentialRun *runData)
 {
     const CsdfGraph *graph = runData->graph;
@@ -95,9 +33,7 @@ static void create_buffers(CsdfSequentialRun *runData)
     {
         const CsdfConnection *connection = graph->connections + bufferId;
 
-        void *bufferData = new_buffer_data(runData, connection);
-        runData->buffers[bufferId] = new_buffer(connection, bufferData,
-                                                buffer_push, buffer_pop, number_tokens);
+        runData->buffers[bufferId] = new_stdlockfree_buffer(connection, calculate_buffer_max_tokens(runData, connection));
     }
 }
 
@@ -148,9 +84,7 @@ void delete_sequential_run(CsdfSequentialRun *runData)
 {
     for (size_t bufferId = 0; bufferId < runData->graph->numConnections; bufferId++)
     {
-        CsdfBuffer *buffer = runData->buffers[bufferId];
-        free_buffer_data(buffer->data);
-        delete_buffer(buffer);
+        delete_stdlockfree_buffer(runData->buffers[bufferId]);
     }
     for (size_t actorId = 0; actorId < runData->graph->numActors; actorId++)
     {
