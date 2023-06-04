@@ -14,7 +14,7 @@ Copyright (c) 2023 Slaven Glumac
 void test_simple_sequential_iteration(YacuTestRun *testRun)
 {
     CsdfSequentialRun *runData = new_sequential_run(&SIMPLE_GRAPH, 1);
-    bool iterationCompleted = sequential_iteration(runData);
+    bool iterationCompleted = sequential_run(runData);
     double *constantOutput = new_record_storage(runData->actorRuns[0]->recordData, 0);
     double *gainOutput = new_record_storage(runData->actorRuns[1]->recordData, 0);
     copy_recorded_tokens(runData->actorRuns[0]->recordData, 0, constantOutput);
@@ -30,7 +30,7 @@ void test_simple_sequential_iteration(YacuTestRun *testRun)
 void test_larger_sequential_iteration(YacuTestRun *testRun)
 {
     CsdfSequentialRun *runData = new_sequential_run(&LARGER_GRAPH, 1);
-    bool iterationCompleted = sequential_iteration(runData);
+    bool iterationCompleted = sequential_run(runData);
     delete_sequential_run(runData);
     YACU_ASSERT_TRUE(testRun, iterationCompleted);
 }
@@ -39,7 +39,7 @@ void test_larger_produced_record(YacuTestRun *testRun)
 {
     CsdfSequentialRun *runData = new_sequential_run(&LARGER_GRAPH, 100);
 
-    YACU_ASSERT_TRUE(testRun, sequential_iteration(runData));
+    YACU_ASSERT_TRUE(testRun, sequential_run(runData));
 
     int *leftIntOutputProducedTokens = new_record_storage(runData->actorRuns[0]->recordData, 1);
     copy_recorded_tokens(runData->actorRuns[0]->recordData, 1, leftIntOutputProducedTokens);

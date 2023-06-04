@@ -66,6 +66,7 @@ static void create_actor_runs(CsdfSequentialRun *runData, unsigned numIterations
 
         runData->actorRuns[actorId] = new_actor_run(actor, recordData, inputBuffers, outputBuffers);
     }
+    runData->numIterations = numIterations;
 }
 
 CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations)
@@ -112,7 +113,7 @@ static bool all_zero(unsigned int *repetitionVector, size_t numActors)
     return true;
 }
 
-bool sequential_iteration(CsdfSequentialRun *runData)
+static bool sequential_iteration(CsdfSequentialRun *runData)
 {
     bool blocked = false;
 
@@ -142,4 +143,16 @@ bool sequential_iteration(CsdfSequentialRun *runData)
     bool iterationCompleted = all_zero(repetitionVector, numActors);
     free(repetitionVector);
     return iterationCompleted;
+}
+
+bool sequential_run(CsdfSequentialRun *runData)
+{
+    for (unsigned int executed = 0; executed < runData->numIterations; executed++)
+    {
+        if (!sequential_iteration(runData))
+        {
+            return false;
+        }
+    }
+    return true;
 }

@@ -24,16 +24,13 @@ typedef struct CsdfSequentialRun
     unsigned int *repetitionVector;
     CsdfBuffer **buffers;
     CsdfActorRun **actorRuns;
+    unsigned int numIterations;
 } CsdfSequentialRun;
 
 CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations);
 
 void delete_sequential_run(CsdfSequentialRun *runData);
 
-bool can_fire(CsdfActorRun *runData);
-
-void fire(CsdfActorRun *runData);
-
-bool sequential_iteration(CsdfSequentialRun *runData);
+bool sequential_run(CsdfSequentialRun *runData);
 
 #endif // CSDF_EXECUTION_SEQUENTIAL_H

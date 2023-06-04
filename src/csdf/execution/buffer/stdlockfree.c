@@ -62,8 +62,8 @@ static void buffer_pop(CsdfBuffer *buffer, uint8_t *token)
 static unsigned number_tokens(CsdfBuffer *buffer)
 {
     const CsdfBufferStdLockFreeData *data = buffer->data;
-    unsigned end = data->end;
-    unsigned start = data->start;
+    size_t start = atomic_load(&data->start);
+    size_t end = atomic_load(&data->end);
 
     return end >= start
                ? end - start
