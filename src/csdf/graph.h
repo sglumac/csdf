@@ -25,21 +25,21 @@ typedef struct CsdfOutputId
     const size_t outputId;
 } CsdfOutputId;
 
-typedef struct CsdfBuffer
+typedef struct CsdfConnection
 {
     const CsdfOutputId source;
     const CsdfInputId destination;
     const size_t tokenSize;
     const size_t numTokens;
     const void *const initialTokens;
-} CsdfBuffer;
+} CsdfConnection;
 
 typedef struct CsdfGraph
 {
     const size_t numActors;
     const CsdfActor *const actors;
-    const size_t numBuffers;
-    const CsdfBuffer *const buffers;
+    const size_t numConnections;
+    const CsdfConnection *const connections;
 } CsdfGraph;
 
 #endif // CSDF_GRAPH_H

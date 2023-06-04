@@ -12,82 +12,62 @@ Copyright (c) 2023 Slaven Glumac
 #include <stdlib.h>
 #include <string.h>
 
-typedef struct RecordProducedState
+static void store_produced_tokens(const uint8_t *produced, CsdfRecordData *recordData)
 {
-    uint8_t ***allProduced;
-    size_t **ends;
-    size_t maxTokens;
-} RecordProducedState;
-
-static void store_produced_tokens(const CsdfGraph *graph, void *recordState, size_t actorId, void *produced)
-{
-    RecordProducedState *recordProducedState = recordState;
-    const CsdfActor *actor = graph->actors + actorId;
-    uint8_t **producedByTheActor = recordProducedState->allProduced[actorId];
-    size_t *endsByTheActor = recordProducedState->ends[actorId];
-    uint8_t *producedTokens = produced;
+    const uint8_t *producedTokens = produced;
+    if (recordData->executionsRecorded >= recordData->maxExecutions)
+    {
+        return;
+    }
+    const CsdfActor *actor = recordData->actor;
     for (size_t outputId = 0; outputId < actor->numOutputs; outputId++)
     {
         const CsdfOutput *output = actor->outputs + outputId;
-        uint8_t *producedByTheOutput = producedByTheActor[outputId] + endsByTheActor[outputId];
         size_t outputTokensSize = output->production * output->tokenSize;
-        endsByTheActor[outputId] += outputTokensSize;
-        memcpy(producedByTheOutput, producedTokens, outputTokensSize);
+        size_t resultsOffset = outputTokensSize * recordData->executionsRecorded;
+        uint8_t *recordedOutputResults = recordData->recordedResults[outputId] + resultsOffset;
+        memcpy(recordedOutputResults, producedTokens, outputTokensSize);
         producedTokens += outputTokensSize;
     }
+    recordData->executionsRecorded++;
 }
 
-CsdfRecordOptions *new_record_produced_options(const CsdfGraph *graph, size_t maxTokens)
+CsdfRecordData *new_record_produced(const CsdfActor *actor, size_t numExecutions)
 {
-    CsdfRecordOptions *recordOptions = malloc(sizeof(CsdfRecordOptions));
-    RecordProducedState *state = malloc(sizeof(RecordProducedState));
-    recordOptions->recordState = state;
-    state->maxTokens = maxTokens;
-    state->allProduced = malloc(graph->numActors * sizeof(uint8_t **));
-    state->ends = malloc(graph->numActors * sizeof(size_t *));
+    CsdfRecordData *recordData = malloc(sizeof(CsdfRecordData));
+    recordData->actor = actor;
+    recordData->recordedResults = malloc(actor->numOutputs * sizeof(uint8_t *));
+    recordData->executionsRecorded = 0;
+    recordData->maxExecutions = numExecutions;
 
-    for (size_t actorId = 0; actorId < graph->numActors; actorId++)
+    for (size_t outputId = 0; outputId < actor->numOutputs; outputId++)
     {
-        const CsdfActor *actor = graph->actors + actorId;
-        state->allProduced[actorId] = malloc(actor->numOutputs * sizeof(uint8_t *));
-        state->ends[actorId] = malloc(actor->numOutputs * sizeof(size_t));
-        for (size_t outputId = 0; outputId < actor->numOutputs; outputId++)
-        {
-            const CsdfOutput *output = actor->outputs + outputId;
-            state->allProduced[actorId][outputId] = malloc(maxTokens * output->tokenSize);
-            state->ends[actorId][outputId] = 0;
-        }
+        const CsdfOutput *output = actor->outputs + outputId;
+        recordData->recordedResults[outputId] = malloc(
+            numExecutions * output->production * output->tokenSize);
     }
 
-    recordOptions->recordState = state;
-    recordOptions->on_token_produced = store_produced_tokens;
-    recordOptions->on_token_consumed = NULL;
-    return recordOptions;
+    recordData->on_token_produced = store_produced_tokens;
+    return recordData;
 }
 
-void delete_record_produced_options(const CsdfGraph *graph, CsdfRecordOptions *recordOptions)
+void delete_record_produced(CsdfRecordData *recordData)
 {
-    RecordProducedState *state = recordOptions->recordState;
-    for (size_t actorId = 0; actorId < graph->numActors; actorId++)
+    const CsdfActor *actor = recordData->actor;
+    for (size_t outputId = 0; outputId < actor->numOutputs; outputId++)
     {
-        const CsdfActor *actor = graph->actors + actorId;
-        for (size_t outputId = 0; outputId < actor->numOutputs; outputId++)
-        {
-            free(state->allProduced[actorId][outputId]);
-        }
-        free(state->allProduced[actorId]);
-        free(state->ends[actorId]);
+        free(recordData->recordedResults[outputId]);
     }
-    free(state->allProduced);
-    free(state->ends);
-    free(recordOptions->recordState);
-    free(recordOptions);
+
+    free(recordData->recordedResults);
+    free(recordData);
 }
 
-void *new_record_storage(const CsdfRecordOptions *recordOptions, size_t actorId, size_t outputId)
+void *new_record_storage(const CsdfRecordData *recordData, size_t outputId)
 {
-    RecordProducedState *state = recordOptions->recordState;
-    return malloc(state->ends[actorId][outputId]);
+    const CsdfOutput *output = recordData->actor->outputs + outputId;
+    size_t resultsSize = recordData->executionsRecorded * output->production * output->tokenSize;
+    return malloc(resultsSize);
 }
 
 void delete_record_storage(void *recordStorage)
@@ -95,8 +75,12 @@ void delete_record_storage(void *recordStorage)
     free(recordStorage);
 }
 
-void copy_recorded_produced_tokens(const CsdfRecordOptions *recordOptions, size_t actorId, size_t outputId, void *recordStorage)
+void copy_recorded_tokens(const CsdfRecordData *recordData, size_t outputId, void *recordStorage)
 {
-    RecordProducedState *state = recordOptions->recordState;
-    memcpy(recordStorage, state->allProduced[actorId][outputId], state->ends[actorId][outputId]);
+    const CsdfOutput *output = recordData->actor->outputs + outputId;
+    size_t resultsSize = recordData->executionsRecorded * output->production * output->tokenSize;
+    memcpy(
+        recordStorage,
+        recordData->recordedResults[outputId],
+        resultsSize);
 }
