@@ -15,7 +15,7 @@ Copyright (c) 2023 Slaven Glumac
 #include <string.h>
 #include <stdint.h>
 
-static size_t calculate_buffer_max_tokens(CsdfSequentialRun *runData, const CsdfConnection *connection)
+static size_t calculate_buffer_max_tokens(CsdfGraphRun *runData, const CsdfConnection *connection)
 {
     size_t numInitialTokens = connection->numTokens;
     size_t actorId = connection->source.actorId;
@@ -25,7 +25,7 @@ static size_t calculate_buffer_max_tokens(CsdfSequentialRun *runData, const Csdf
     return numInitialTokens + 2 * potentiallyProducedTokens + 1;
 }
 
-static void create_buffers(CsdfSequentialRun *runData)
+static void create_buffers(CsdfGraphRun *runData)
 {
     const CsdfGraph *graph = runData->graph;
     runData->buffers = malloc(graph->numConnections * sizeof(CsdfBuffer *));
@@ -37,7 +37,7 @@ static void create_buffers(CsdfSequentialRun *runData)
     }
 }
 
-static void create_actor_runs(CsdfSequentialRun *runData, unsigned numIterations)
+static void create_actor_runs(CsdfGraphRun *runData, unsigned numIterations)
 {
     const CsdfGraph *graph = runData->graph;
     runData->actorRuns = malloc(graph->numActors * sizeof(CsdfActorRun *));
@@ -86,9 +86,9 @@ static void create_actor_runs(CsdfSequentialRun *runData, unsigned numIterations
     runData->numIterations = numIterations;
 }
 
-CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations)
+CsdfGraphRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations)
 {
-    CsdfSequentialRun *runData = malloc(sizeof(CsdfSequentialRun));
+    CsdfGraphRun *runData = malloc(sizeof(CsdfGraphRun));
     runData->graph = graph;
     unsigned int *repetitionVector = malloc(graph->numActors * sizeof(size_t));
     csdf_repetition_vector(graph, repetitionVector);
@@ -98,7 +98,7 @@ CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterat
     return runData;
 }
 
-void delete_sequential_run(CsdfSequentialRun *runData)
+void delete_sequential_run(CsdfGraphRun *runData)
 {
     for (size_t bufferId = 0; bufferId < runData->graph->numConnections; bufferId++)
     {
@@ -135,7 +135,7 @@ static bool all_zero(unsigned int *repetitionVector, size_t numActors)
     return true;
 }
 
-static bool sequential_iteration(CsdfSequentialRun *runData)
+static bool sequential_iteration(CsdfGraphRun *runData)
 {
     bool blocked = false;
 
@@ -167,7 +167,7 @@ static bool sequential_iteration(CsdfSequentialRun *runData)
     return iterationCompleted;
 }
 
-bool sequential_run(CsdfSequentialRun *runData)
+bool sequential_run(CsdfGraphRun *runData)
 {
     for (unsigned int executed = 0; executed < runData->numIterations; executed++)
     {

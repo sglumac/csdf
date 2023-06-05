@@ -13,7 +13,7 @@ Copyright (c) 2023 Slaven Glumac
 
 void test_simple_sequential_iteration(YacuTestRun *testRun)
 {
-    CsdfSequentialRun *runData = new_sequential_run(&SIMPLE_GRAPH, 1);
+    CsdfGraphRun *runData = new_sequential_run(&SIMPLE_GRAPH, 1);
     bool iterationCompleted = sequential_run(runData);
     double *constantOutput = new_record_storage(runData->actorRuns[0]->recordData, 0);
     double *gainOutput = new_record_storage(runData->actorRuns[1]->recordData, 0);
@@ -29,7 +29,7 @@ void test_simple_sequential_iteration(YacuTestRun *testRun)
 
 void test_simple_sequential_run(YacuTestRun *testRun)
 {
-    CsdfSequentialRun *runData = new_sequential_run(&SIMPLE_GRAPH, 100);
+    CsdfGraphRun *runData = new_sequential_run(&SIMPLE_GRAPH, 100);
     bool iterationCompleted = sequential_run(runData);
     double *constantOutput = new_record_storage(runData->actorRuns[0]->recordData, 0);
     double *gainOutput = new_record_storage(runData->actorRuns[1]->recordData, 0);
@@ -48,7 +48,7 @@ void test_simple_sequential_run(YacuTestRun *testRun)
 
 void test_larger_sequential_iteration(YacuTestRun *testRun)
 {
-    CsdfSequentialRun *runData = new_sequential_run(&LARGER_GRAPH, 1);
+    CsdfGraphRun *runData = new_sequential_run(&LARGER_GRAPH, 1);
     bool iterationCompleted = sequential_run(runData);
     delete_sequential_run(runData);
     YACU_ASSERT_TRUE(testRun, iterationCompleted);
@@ -56,7 +56,7 @@ void test_larger_sequential_iteration(YacuTestRun *testRun)
 
 void test_larger_produced_record(YacuTestRun *testRun)
 {
-    CsdfSequentialRun *runData = new_sequential_run(&LARGER_GRAPH, 100);
+    CsdfGraphRun *runData = new_sequential_run(&LARGER_GRAPH, 100);
 
     YACU_ASSERT_TRUE(testRun, sequential_run(runData));
 

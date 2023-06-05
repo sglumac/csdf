@@ -18,19 +18,19 @@ Copyright (c) 2023 Slaven Glumac
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef struct CsdfSequentialRun
+typedef struct CsdfGraphRun
 {
     const CsdfGraph *graph;
     unsigned int *repetitionVector;
     CsdfBuffer **buffers;
     CsdfActorRun **actorRuns;
     unsigned int numIterations;
-} CsdfSequentialRun;
+} CsdfGraphRun;
 
-CsdfSequentialRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations);
+CsdfGraphRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations);
 
-void delete_sequential_run(CsdfSequentialRun *runData);
+void delete_sequential_run(CsdfGraphRun *runData);
 
-bool sequential_run(CsdfSequentialRun *runData);
+bool sequential_run(CsdfGraphRun *runData);
 
 #endif // CSDF_EXECUTION_SEQUENTIAL_H
