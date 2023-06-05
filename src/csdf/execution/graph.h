@@ -22,8 +22,8 @@ typedef struct CsdfGraphRun
     unsigned int numIterations;
 } CsdfGraphRun;
 
-CsdfGraphRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations);
+CsdfGraphRun *new_graph_run(const CsdfGraph *graph, unsigned numIterations);
 
-void delete_sequential_run(CsdfGraphRun *runData);
+void delete_graph_run(CsdfGraphRun *runData);
 
 #endif // CSDF_EXECUTION_GRAPH_H

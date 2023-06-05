@@ -84,7 +84,7 @@ static void create_actor_runs(CsdfGraphRun *runData, unsigned numIterations)
     runData->numIterations = numIterations;
 }
 
-CsdfGraphRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations)
+CsdfGraphRun *new_graph_run(const CsdfGraph *graph, unsigned numIterations)
 {
     CsdfGraphRun *runData = malloc(sizeof(CsdfGraphRun));
     runData->graph = graph;
@@ -96,7 +96,7 @@ CsdfGraphRun *new_sequential_run(const CsdfGraph *graph, unsigned numIterations)
     return runData;
 }
 
-void delete_sequential_run(CsdfGraphRun *runData)
+void delete_graph_run(CsdfGraphRun *runData)
 {
     for (size_t bufferId = 0; bufferId < runData->graph->numConnections; bufferId++)
     {
