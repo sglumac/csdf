@@ -70,6 +70,11 @@ bool can_fire(CsdfActorRun *runData)
 {
     const CsdfActor *actor = runData->actor;
 
+    if (runData->fireCount >= runData->maxFireCount)
+    {
+        return false;
+    }
+
     for (size_t dstPortId = 0; dstPortId < actor->numInputs; dstPortId++)
     {
 
@@ -98,7 +103,10 @@ void fire(CsdfActorRun *runData)
     record_results(runData);
 }
 
-CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, CsdfBuffer **inputBuffers, CsdfBuffer ***outputBuffers, size_t *numOutputBuffers)
+CsdfActorRun *new_actor_run(
+    const CsdfActor *actor, CsdfRecordData *recordData,
+    CsdfBuffer **inputBuffers, CsdfBuffer ***outputBuffers,
+    size_t *numOutputBuffers, unsigned maxFireCount)
 {
     CsdfActorRun *actorRun = malloc(sizeof(CsdfActorRun));
     actorRun->actor = actor;
@@ -121,6 +129,8 @@ CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, 
     actorRun->inputBuffers = inputBuffers;
     actorRun->outputBuffers = outputBuffers;
     actorRun->numOutputBuffers = numOutputBuffers;
+    actorRun->maxFireCount = maxFireCount;
+    actorRun->fireCount = 0;
     return actorRun;
 }
 

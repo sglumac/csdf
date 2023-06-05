@@ -15,7 +15,7 @@ Copyright (c) 2023 Slaven Glumac
 static void store_produced_tokens(const uint8_t *produced, CsdfRecordData *recordData)
 {
     const uint8_t *producedTokens = produced;
-    if (recordData->executionsRecorded >= recordData->maxExecutions)
+    if (recordData->executionsRecorded >= recordData->maxFireCount)
     {
         return;
     }
@@ -32,19 +32,19 @@ static void store_produced_tokens(const uint8_t *produced, CsdfRecordData *recor
     recordData->executionsRecorded++;
 }
 
-CsdfRecordData *new_record_produced(const CsdfActor *actor, size_t numExecutions)
+CsdfRecordData *new_record_produced(const CsdfActor *actor, size_t maxFireCount)
 {
     CsdfRecordData *recordData = malloc(sizeof(CsdfRecordData));
     recordData->actor = actor;
     recordData->recordedResults = malloc(actor->numOutputs * sizeof(uint8_t *));
     recordData->executionsRecorded = 0;
-    recordData->maxExecutions = numExecutions;
+    recordData->maxFireCount = maxFireCount;
 
     for (size_t outputId = 0; outputId < actor->numOutputs; outputId++)
     {
         const CsdfOutput *output = actor->outputs + outputId;
         recordData->recordedResults[outputId] = malloc(
-            numExecutions * output->production * output->tokenSize);
+            maxFireCount * output->production * output->tokenSize);
     }
 
     recordData->on_token_produced = store_produced_tokens;

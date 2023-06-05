@@ -43,8 +43,8 @@ static void create_actor_runs(CsdfGraphRun *runData, unsigned numIterations)
     {
         const CsdfActor *actor = graph->actors + actorId;
 
-        size_t numFirings = numIterations * runData->repetitionVector[actorId];
-        CsdfRecordData *recordData = new_record_produced(actor, numFirings);
+        size_t maxFireCount = numIterations * runData->repetitionVector[actorId];
+        CsdfRecordData *recordData = new_record_produced(actor, maxFireCount);
 
         CsdfBuffer **inputBuffers = malloc(actor->numInputs * sizeof(CsdfBuffer *));
         CsdfBuffer ***outputBuffers = malloc(actor->numOutputs * sizeof(CsdfBuffer **));
@@ -79,7 +79,9 @@ static void create_actor_runs(CsdfGraphRun *runData, unsigned numIterations)
         }
         free(bufferOutputIds);
 
-        runData->actorRuns[actorId] = new_actor_run(actor, recordData, inputBuffers, outputBuffers, numOutputBuffers);
+        runData->actorRuns[actorId] = new_actor_run(
+            actor, recordData, inputBuffers, outputBuffers,
+            numOutputBuffers, maxFireCount);
     }
     runData->numIterations = numIterations;
 }

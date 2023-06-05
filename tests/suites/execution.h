@@ -11,6 +11,6 @@ Copyright (c) 2023 Slaven Glumac
 
 #include <yacu.h>
 
-extern YacuTest sequentialTests[];
+extern YacuTest executionTests[];
 
 #endif // SUITES_GRAPH_H

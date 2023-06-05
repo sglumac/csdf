@@ -9,9 +9,10 @@ Copyright (c) 2023 Slaven Glumac
 #ifndef CSDF_EXECUTION_GRAPH_H
 #define CSDF_EXECUTION_GRAPH_H
 
+#include "buffer.h"
+#include "actor.h"
+
 #include <csdf/graph.h>
-#include <csdf/execution/buffer.h>
-#include <csdf/execution/actor.h>
 
 typedef struct CsdfGraphRun
 {

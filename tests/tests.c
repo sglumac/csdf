@@ -10,12 +10,12 @@ Copyright (c) 2023 Slaven Glumac
 
 #include <suites/actors.h>
 #include <suites/graph.h>
-#include <suites/sequential.h>
+#include <suites/execution.h>
 
 YacuSuite suites[] = {
     {"ActorsSuite", actorsTests},
     {"GraphSuite", graphTests},
-    {"SequentialSuite", sequentialTests},
+    {"ExecutionSuite", executionTests},
     END_OF_SUITES};
 
 int main(int argc, char const *argv[])

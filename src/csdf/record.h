@@ -23,11 +23,11 @@ struct CsdfRecordData
     const CsdfActor *actor;
     uint8_t **recordedResults;
     CsdfOnTokenProduced on_token_produced;
-    size_t maxExecutions;
+    size_t maxFireCount;
     size_t executionsRecorded;
 };
 
-CsdfRecordData *new_record_produced(const CsdfActor *actor, size_t numExecutions);
+CsdfRecordData *new_record_produced(const CsdfActor *actor, size_t maxFireCount);
 
 void delete_record_produced(CsdfRecordData *recordData);
 

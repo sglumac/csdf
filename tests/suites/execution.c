@@ -6,7 +6,7 @@ MIT License
 Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
-#include <suites/sequential.h>
+#include "execution.h"
 #include <samples/simple.h>
 #include <samples/larger.h>
 #include <csdf/execution/sequential.h>
@@ -44,6 +44,11 @@ void test_simple_sequential_run(YacuTestRun *testRun)
     delete_record_storage(constantOutput);
     delete_record_storage(gainOutput);
     delete_graph_run(runData);
+}
+
+void test_simple_parallel_run(YacuTestRun *testRun)
+{
+    YACU_ASSERT_TRUE(testRun, false);
 }
 
 void test_larger_sequential_iteration(YacuTestRun *testRun)
@@ -110,9 +115,16 @@ void test_larger_produced_record(YacuTestRun *testRun)
     delete_graph_run(runData);
 }
 
-YacuTest sequentialTests[] = {
+void test_larger_parallel(YacuTestRun *testRun)
+{
+    YACU_ASSERT_TRUE(testRun, false);
+}
+
+YacuTest executionTests[] = {
     {"SimpleSequentialIterationTest", &test_simple_sequential_iteration},
     {"SimpleSequentialRun", &test_simple_sequential_run},
+    {"SimpleSequentialRun", &test_simple_parallel_run},
     {"LargerSequentialIterationTest", &test_larger_sequential_iteration},
     {"LargerProducedRecordTest", &test_larger_produced_record},
+    {"LargerParallel", &test_larger_parallel},
     END_OF_TESTS};
