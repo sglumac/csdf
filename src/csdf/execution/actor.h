@@ -23,10 +23,11 @@ typedef struct CsdfActorRun
     uint8_t *produced;
     CsdfRecordData *recordData;
     CsdfBuffer **inputBuffers;
-    CsdfBuffer **outputBuffers;
+    CsdfBuffer ***outputBuffers;
+    size_t *numOutputBuffers;
 } CsdfActorRun;
 
-CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, CsdfBuffer **inputBuffers, CsdfBuffer **outputBuffers);
+CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, CsdfBuffer **inputBuffers, CsdfBuffer ***outputBuffers, size_t *numOutputBuffers);
 
 void delete_actor_run(CsdfActorRun *runData);
 

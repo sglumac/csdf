@@ -45,21 +45,24 @@ static void produce(CsdfActorRun *runData)
 
     const CsdfActor *actor = runData->actor;
     uint8_t *produced = runData->produced;
-    uint8_t *token = produced;
+    uint8_t *producedIt = produced;
     const CsdfOutput *output = actor->outputs;
 
-    for (
-        size_t outputId = 0;
-        outputId < actor->numOutputs;
-        outputId++, output++)
+    for (size_t outputId = 0; outputId < actor->numOutputs; outputId++, output++)
     {
-        CsdfBuffer *buffer = runData->outputBuffers[outputId];
-        for (size_t tokenId = 0; tokenId < output->production; tokenId++)
+        uint8_t *token = NULL;
+        for (size_t bufferId = 0; bufferId < runData->numOutputBuffers[outputId]; bufferId++)
         {
-            buffer->push(buffer, token);
+            CsdfBuffer *buffer = runData->outputBuffers[outputId][bufferId];
+            token = producedIt;
+            for (size_t tokenId = 0; tokenId < output->production; tokenId++)
+            {
+                buffer->push(buffer, token);
 
-            token += output->tokenSize;
+                token += output->tokenSize;
+            }
         }
+        producedIt = token;
     }
 }
 
@@ -95,7 +98,7 @@ void fire(CsdfActorRun *runData)
     record_results(runData);
 }
 
-CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, CsdfBuffer **inputBuffers, CsdfBuffer **outputBuffers)
+CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, CsdfBuffer **inputBuffers, CsdfBuffer ***outputBuffers, size_t *numOutputBuffers)
 {
     CsdfActorRun *actorRun = malloc(sizeof(CsdfActorRun));
     actorRun->actor = actor;
@@ -117,6 +120,7 @@ CsdfActorRun *new_actor_run(const CsdfActor *actor, CsdfRecordData *recordData, 
     actorRun->recordData = recordData;
     actorRun->inputBuffers = inputBuffers;
     actorRun->outputBuffers = outputBuffers;
+    actorRun->numOutputBuffers = numOutputBuffers;
     return actorRun;
 }
 
