@@ -93,7 +93,6 @@ bool can_fire(CsdfActorRun *runData)
 
 void fire(CsdfActorRun *runData)
 {
-
     consume(runData);
 
     runData->actor->execution(runData->consumed, runData->produced);
@@ -101,6 +100,8 @@ void fire(CsdfActorRun *runData)
     produce(runData);
 
     record_results(runData);
+
+    runData->fireCount++;
 }
 
 CsdfActorRun *new_actor_run(

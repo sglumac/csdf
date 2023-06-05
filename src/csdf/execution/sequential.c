@@ -9,7 +9,6 @@ Copyright (c) 2023 Slaven Glumac
 #include "sequential.h"
 #include "buffer/stdlockfree.h"
 #include "actor.h"
-#include <csdf/repetition.h>
 
 #include <stdlib.h>
 #include <string.h>

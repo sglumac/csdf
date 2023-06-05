@@ -20,7 +20,7 @@ static size_t calculate_buffer_max_tokens(CsdfGraphRun *runData, const CsdfConne
     const CsdfActor *actor = runData->graph->actors + actorId;
     const CsdfOutput *output = actor->outputs + connection->source.outputId;
     size_t potentiallyProducedTokens = runData->repetitionVector[actorId] * output->production;
-    return numInitialTokens + 2 * potentiallyProducedTokens + 1;
+    return numInitialTokens + 150 * potentiallyProducedTokens + 1;
 }
 
 static void create_buffers(CsdfGraphRun *runData)
