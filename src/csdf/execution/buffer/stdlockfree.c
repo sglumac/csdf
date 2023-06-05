@@ -12,26 +12,26 @@ Copyright (c) 2023 Slaven Glumac
 #include <string.h>
 #include <stdatomic.h>
 
-#if ATOMIC_LLONG_LOCK_FREE != 2
-#error "atomic_ullong not supported!"
+#if ATOMIC_INT_LOCK_FREE != 2
+#error "atomic_int not supported!"
 #endif
 
 typedef struct CsdfBufferStdLockFreeData
 {
-    atomic_size_t start;
-    atomic_size_t end;
-    size_t maxTokens;
+    atomic_uint start;
+    atomic_uint end;
+    unsigned maxTokens;
     uint8_t *tokens;
 } CsdfBufferStdLockFreeData;
 
 static void buffer_push(CsdfBuffer *buffer, const uint8_t *token)
 {
     CsdfBufferStdLockFreeData *data = buffer->data;
-    size_t end = atomic_load(&data->end);
-    size_t tokenSize = buffer->connection->tokenSize;
+    unsigned end = atomic_load(&data->end);
+    int tokenSize = buffer->connection->tokenSize;
     uint8_t *bufferEnd = data->tokens + tokenSize * end;
     end = (end + 1) % data->maxTokens;
-    size_t start = atomic_load(&data->start);
+    unsigned start = atomic_load(&data->start);
     if (end == start)
     {
         exit(123);
@@ -40,9 +40,9 @@ static void buffer_push(CsdfBuffer *buffer, const uint8_t *token)
     atomic_exchange(&data->end, end);
 }
 
-static void atomic_modulus(atomic_size_t *value, size_t divisor)
+static void atomic_modulus(atomic_uint *value, unsigned divisor)
 {
-    size_t currentValue, remainder;
+    int currentValue, remainder;
     do
     {
         currentValue = atomic_load(value);
@@ -53,7 +53,7 @@ static void atomic_modulus(atomic_size_t *value, size_t divisor)
 static void buffer_pop(CsdfBuffer *buffer, uint8_t *token)
 {
     CsdfBufferStdLockFreeData *data = buffer->data;
-    size_t start = atomic_fetch_add(&data->start, 1);
+    unsigned start = atomic_fetch_add(&data->start, 1);
     uint8_t *bufferStart = data->tokens + buffer->connection->tokenSize * start;
     memcpy(token, bufferStart, buffer->connection->tokenSize);
     atomic_modulus(&data->start, data->maxTokens);
@@ -62,8 +62,8 @@ static void buffer_pop(CsdfBuffer *buffer, uint8_t *token)
 static unsigned number_tokens(CsdfBuffer *buffer)
 {
     const CsdfBufferStdLockFreeData *data = buffer->data;
-    size_t start = atomic_load(&data->start);
-    size_t end = atomic_load(&data->end);
+    unsigned start = atomic_load(&data->start);
+    unsigned end = atomic_load(&data->end);
 
     return end >= start
                ? end - start
