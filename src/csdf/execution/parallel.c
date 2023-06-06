@@ -39,7 +39,7 @@ bool parallel_run(const CsdfThreading *threading, CsdfGraphRun *runData)
 
     CsdfParallelActorRun *parallelActorRuns = malloc(graph->numActors * sizeof(CsdfParallelActorRun));
 
-    void **threadsData = malloc(graph->numActors * sizeof(threading->threadDataSize));
+    void **threadsData = malloc(graph->numActors * sizeof(void *));
 
     for (size_t actorId = 0; actorId < graph->numActors; actorId++)
     {
@@ -60,6 +60,9 @@ bool parallel_run(const CsdfThreading *threading, CsdfGraphRun *runData)
         {
             return false;
         }
+        free(threadsData[actorId]);
     }
+    free(threadsData);
+    free(parallelActorRuns);
     return true;
 }
