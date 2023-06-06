@@ -8,39 +8,38 @@ Copyright (c) 2023 Slaven Glumac
 
 #include "parallel.h"
 
-#include <threads.h>
+#include <pthread.h>
 #include <stdlib.h>
+#include <unistd.h>
 
-static int run_actor(void *actorRunAsVoidPtr)
+static void *run_actor(void *actorRunAsVoidPtr)
 {
     CsdfActorRun *actorRun = actorRunAsVoidPtr;
-    struct timespec pauseLength = {.tv_sec = 0, .tv_nsec = 100};
     while (actorRun->fireCount < actorRun->maxFireCount)
     {
         while (!can_fire(actorRun))
         {
-            thrd_sleep(&pauseLength, NULL);
+            usleep(100);
         }
         fire(actorRun);
     }
-    return 0;
+    pthread_exit(0);
 }
 
 bool parallel_run(CsdfGraphRun *runData)
 {
     const CsdfGraph *graph = runData->graph;
-    thrd_t *threads = malloc(graph->numActors * sizeof(thrd_t));
+    pthread_t *threads = malloc(graph->numActors * sizeof(pthread_t));
     for (size_t actorId = 0; actorId < graph->numActors; actorId++)
     {
-        if (thrd_create(threads + actorId, run_actor, runData->actorRuns[actorId]) != thrd_success)
+        if (pthread_create(threads + actorId, NULL, run_actor, runData->actorRuns[actorId]))
         {
             return false;
         }
     }
     for (size_t actorId = 0; actorId < graph->numActors; actorId++)
     {
-        int result;
-        if (thrd_join(threads[actorId], &result) != thrd_success)
+        if (pthread_join(threads[actorId], NULL))
         {
             return false;
         }
