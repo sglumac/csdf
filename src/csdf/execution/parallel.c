@@ -47,7 +47,7 @@ bool parallel_run(const CsdfThreading *threading, CsdfGraphRun *runData)
         parallelActorRun->threading = threading;
         parallelActorRun->actorRun = runData->actorRuns[actorId];
 
-        threadsData[actorId] = malloc(sizeof(threading->threadDataSize));
+        threadsData[actorId] = malloc(threading->threadDataSize);
 
         if (!threading->createThread(threadsData[actorId], run_actor, parallelActorRun))
         {

@@ -83,8 +83,8 @@ void test_simple_parallel_run(YacuTestRun *testRun)
         YACU_ASSERT_APPROX_EQ_DBL(testRun, gain1Output[tokenId], gain2Output[tokenId], 1e-3);
     }
 
-    delete_record_storage(constant1Output);
-    delete_record_storage(constant2Output);
+    delete_record_storage(gain1Output);
+    delete_record_storage(gain2Output);
 
     delete_graph_run(run1Data);
     delete_graph_run(run2Data);
