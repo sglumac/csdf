@@ -8,38 +8,55 @@ Copyright (c) 2023 Slaven Glumac
 
 #include "parallel.h"
 
-#include <pthread.h>
 #include <stdlib.h>
-#include <unistd.h>
 
-static void *run_actor(void *actorRunAsVoidPtr)
+typedef struct CsdfParallelActorRun
 {
-    CsdfActorRun *actorRun = actorRunAsVoidPtr;
+    const CsdfThreading *threading;
+    CsdfActorRun *actorRun;
+} CsdfParallelActorRun;
+
+static bool run_actor(void *taskData)
+{
+    CsdfParallelActorRun *parallel = taskData;
+    CsdfActorRun *actorRun = parallel->actorRun;
+    const CsdfThreading *threading = parallel->threading;
+
     while (actorRun->fireCount < actorRun->maxFireCount)
     {
         while (!can_fire(actorRun))
         {
-            usleep(100);
+            threading->sleep(threading->microsecondsSleep);
         }
         fire(actorRun);
     }
-    pthread_exit(0);
+    return true;
 }
 
-bool parallel_run(CsdfGraphRun *runData)
+bool parallel_run(const CsdfThreading *threading, CsdfGraphRun *runData)
 {
     const CsdfGraph *graph = runData->graph;
-    pthread_t *threads = malloc(graph->numActors * sizeof(pthread_t));
+
+    CsdfParallelActorRun *parallelActorRuns = malloc(graph->numActors * sizeof(CsdfParallelActorRun));
+
+    void **threadsData = malloc(graph->numActors * sizeof(threading->threadDataSize));
+
     for (size_t actorId = 0; actorId < graph->numActors; actorId++)
     {
-        if (pthread_create(threads + actorId, NULL, run_actor, runData->actorRuns[actorId]))
+        CsdfParallelActorRun *parallelActorRun = parallelActorRuns + actorId;
+        parallelActorRun->threading = threading;
+        parallelActorRun->actorRun = runData->actorRuns[actorId];
+
+        threadsData[actorId] = malloc(sizeof(threading->threadDataSize));
+
+        if (!threading->createThread(threadsData[actorId], run_actor, parallelActorRun))
         {
             return false;
         }
-    }
+    };
     for (size_t actorId = 0; actorId < graph->numActors; actorId++)
     {
-        if (pthread_join(threads[actorId], NULL))
+        if (!threading->joinThread(threadsData[actorId]))
         {
             return false;
         }

@@ -7,10 +7,11 @@ Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
 #include "execution.h"
+#include "parallel.h"
+
 #include <samples/simple.h>
 #include <samples/larger.h>
 #include <csdf/execution/sequential.h>
-#include <csdf/execution/parallel.h>
 
 void test_simple_sequential_iteration(YacuTestRun *testRun)
 {
@@ -55,7 +56,7 @@ void test_simple_parallel_run(YacuTestRun *testRun)
     bool run1Completed = sequential_run(run1Data);
 
     YACU_ASSERT_TRUE(testRun, run1Completed);
-    YACU_ASSERT_TRUE(testRun, parallel_run(run2Data));
+    YACU_ASSERT_TRUE(testRun, parallel_run(&TEST_THREADING, run2Data));
 
     double *constant1Output = new_record_storage(run1Data->actorRuns[0]->recordData, 0);
     double *constant2Output = new_record_storage(run2Data->actorRuns[0]->recordData, 0);
