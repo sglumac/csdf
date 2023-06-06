@@ -9,6 +9,6 @@ endif()
 
 add_subdirectory(src)
 
-if(BUILD_CSDF_TESTS STREQUAL "True")
+if(BUILD_CSDF_TESTS)
   add_subdirectory(tests)
 endif()
