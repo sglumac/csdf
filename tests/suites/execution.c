@@ -55,9 +55,10 @@ void test_simple_parallel_run(YacuTestRun *testRun)
     CsdfGraphRun *run2Data = new_graph_run(&SIMPLE_GRAPH, 100);
 
     bool run1Completed = sequential_run(run1Data);
+    bool run2Completed = parallel_run(&CSDF_PTHREAD_THREADING, run2Data);
 
     YACU_ASSERT_TRUE(testRun, run1Completed);
-    YACU_ASSERT_TRUE(testRun, parallel_run(CSDF_PTHREAD_THREADING, run2Data));
+    YACU_ASSERT_TRUE(testRun, run2Completed);
 
     double *constant1Output = new_record_storage(run1Data->actorRuns[0]->recordData, 0);
     double *constant2Output = new_record_storage(run2Data->actorRuns[0]->recordData, 0);
