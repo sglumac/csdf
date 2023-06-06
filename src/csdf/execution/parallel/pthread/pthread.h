@@ -11,6 +11,6 @@ Copyright (c) 2023 Slaven Glumac
 
 #include <csdf/execution/parallel.h>
 
-extern const CsdfThreading TEST_THREADING;
+extern const CsdfThreading CSDF_PTHREAD_THREADING;
 
 #endif // SUITES_PARALLEL_H

@@ -1,4 +1,4 @@
-add_executable(tests tests.c samples/simple.c samples/larger.c suites/actors.c suites/graph.c suites/execution.c suites/parallel.c)
+add_executable(tests tests.c samples/simple.c samples/larger.c suites/actors.c suites/graph.c suites/execution.c)
 
 include(FetchContent)
 

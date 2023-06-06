@@ -6,7 +6,8 @@ MIT License
 Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
-#include "parallel.h"
+#include "pthread.h"
+
 #include <pthread.h>
 #include <unistd.h>
 
@@ -44,7 +45,7 @@ bool csdf_join_thread(void *threadData)
     return !pthread_join(pThreadData->pThread, NULL);
 }
 
-const CsdfThreading TEST_THREADING = {
+const CsdfThreading CSDF_PTHREAD_THREADING = {
     .threadDataSize = sizeof(PThreadData),
     .sleep = csdf_sleep,
     .createThread = csdf_create_thread,
