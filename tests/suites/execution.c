@@ -62,6 +62,8 @@ void test_simple_parallel_run(YacuTestRun *testRun)
 
     double *constant1Output = new_record_storage(run1Data->actorRuns[0]->recordData, 0);
     double *constant2Output = new_record_storage(run2Data->actorRuns[0]->recordData, 0);
+    copy_recorded_tokens(run1Data->actorRuns[0]->recordData, 0, constant1Output);
+    copy_recorded_tokens(run2Data->actorRuns[0]->recordData, 0, constant2Output);
 
     for (size_t tokenId = 0; tokenId < 100; tokenId++)
     {
@@ -73,6 +75,8 @@ void test_simple_parallel_run(YacuTestRun *testRun)
 
     double *gain1Output = new_record_storage(run1Data->actorRuns[1]->recordData, 0);
     double *gain2Output = new_record_storage(run2Data->actorRuns[1]->recordData, 0);
+    copy_recorded_tokens(run1Data->actorRuns[1]->recordData, 0, gain1Output);
+    copy_recorded_tokens(run2Data->actorRuns[1]->recordData, 0, gain2Output);
 
     for (size_t tokenId = 0; tokenId < 100; tokenId++)
     {
