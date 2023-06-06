@@ -9,8 +9,15 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(yacutest)
 
+FetchContent_Declare(
+  pthread4csdf
+  GIT_REPOSITORY https://github.com/sglumac/pthread4csdf.git
+  GIT_TAG main
+)
+FetchContent_MakeAvailable(pthread4csdf)
+
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-target_link_libraries(tests csdf yacu Threads::Threads)
+target_link_libraries(tests csdf yacu pthread4csdf Threads::Threads)
 target_include_directories(tests PRIVATE .)
