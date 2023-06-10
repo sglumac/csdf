@@ -6,7 +6,7 @@ MIT License
 Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
-#include "graph.h"
+#include "graphrun.h"
 #include "buffer/stdlockfree.h"
 
 #include <csdf/repetition.h>

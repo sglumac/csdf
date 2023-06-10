@@ -8,7 +8,7 @@ Copyright (c) 2023 Slaven Glumac
 
 #include "sequential.h"
 #include "buffer/stdlockfree.h"
-#include "actor.h"
+#include "actorrun.h"
 
 #include <stdlib.h>
 #include <string.h>

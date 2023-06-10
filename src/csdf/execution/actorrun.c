@@ -6,7 +6,7 @@ MIT License
 Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
-#include "actor.h"
+#include "actorrun.h"
 
 #include <stdlib.h>
 #include <string.h>

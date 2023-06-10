@@ -6,11 +6,11 @@ MIT License
 Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
-#ifndef CSDF_EXECUTION_GRAPH_H
-#define CSDF_EXECUTION_GRAPH_H
+#ifndef CSDF_EXECUTION_GRAPHRUN_H
+#define CSDF_EXECUTION_GRAPHRUN_H
 
 #include "buffer.h"
-#include "actor.h"
+#include "actorrun.h"
 
 #include <csdf/graph.h>
 
@@ -27,4 +27,4 @@ CsdfGraphRun *new_graph_run(const CsdfGraph *graph, unsigned numIterations);
 
 void delete_graph_run(CsdfGraphRun *runData);
 
-#endif // CSDF_EXECUTION_GRAPH_H
+#endif // CSDF_EXECUTION_GRAPHRUN_H

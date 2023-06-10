@@ -9,7 +9,7 @@ Copyright (c) 2023 Slaven Glumac
 #ifndef CSDF_EXECUTION_PARALLEL_H
 #define CSDF_EXECUTION_PARALLEL_H
 
-#include "graph.h"
+#include "graphrun.h"
 
 #include <threading4csdf.h>
 

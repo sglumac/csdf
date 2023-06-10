@@ -6,8 +6,8 @@ MIT License
 Copyright (c) 2023 Slaven Glumac
 ****************************************************************************/
 
-#ifndef CSDF_EXECUTION_ACTOR_H
-#define CSDF_EXECUTION_ACTOR_H
+#ifndef CSDF_EXECUTION_ACTORRUN_H
+#define CSDF_EXECUTION_ACTORRUN_H
 
 #include "buffer.h"
 
@@ -37,4 +37,4 @@ bool can_fire(CsdfActorRun *runData);
 
 void fire(CsdfActorRun *runData);
 
-#endif // CSDF_EXECUTION_ACTOR_H
+#endif // CSDF_EXECUTION_ACTORRUN_H
