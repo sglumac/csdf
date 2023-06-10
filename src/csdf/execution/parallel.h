@@ -20,7 +20,7 @@ typedef struct CsdfParallelActorRun
     void *threadData;
 } CsdfParallelActorRun;
 
-bool parallel_run(const CsdfThreading *parallelActorRun, CsdfGraphRun *runData);
+bool parallel_run(const CsdfThreading *threading, CsdfGraphRun *runData);
 
 CsdfParallelActorRun *create_parallel_actor_run(const CsdfThreading *threading, CsdfActorRun *actorRun);
 
