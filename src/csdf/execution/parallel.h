@@ -13,6 +13,19 @@ Copyright (c) 2023 Slaven Glumac
 
 #include <threading4csdf.h>
 
+typedef struct CsdfParallelActorRun
+{
+    const CsdfThreading *threading;
+    CsdfActorRun *actorRun;
+    void *threadData;
+} CsdfParallelActorRun;
+
 bool parallel_run(const CsdfThreading *parallelActorRun, CsdfGraphRun *runData);
+
+CsdfParallelActorRun *create_parallel_actor_run(const CsdfThreading *threading, CsdfActorRun *actorRun);
+
+bool join_parallel_actor_run(CsdfParallelActorRun *parallelActorRun);
+
+void delete_parallel_actor_run(CsdfParallelActorRun *parallelActorRun);
 
 #endif // CSDF_EXECUTION_PARALLEL_H
